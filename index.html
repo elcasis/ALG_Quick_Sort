@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quick Sort — Aprende el algoritmo</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Bebas+Neue&family=Barlow:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #05060a;
+    --surface: #090b12;
+    --card: #0e1119;
+    --border: #181d2e;
+    --pivot:   #ff3864;
+    --left:    #00f5d4;
+    --right:   #fee440;
+    --placed:  #38b000;
+    --swap:    #f77f00;
+    --text:    #e8ecf4;
+    --muted:   #5a6278;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Animated grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(#181d2e55 1px, transparent 1px),
+      linear-gradient(90deg, #181d2e55 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 50% at 5% 0%,   #ff386420 0%, transparent 50%),
+      radial-gradient(ellipse 50% 40% at 95% 100%, #00f5d420 0%, transparent 50%),
+      radial-gradient(ellipse 40% 30% at 50% 50%,  #fee44008 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 20px 90px;
+  }
+
+  /* ── Header ─────────────────────────────────────────────────────────────── */
+  header { text-align: center; margin-bottom: 52px; }
+
+  .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--pivot);
+    border: 1px solid var(--pivot);
+    padding: 4px 14px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+  }
+
+  h1 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(4rem, 12vw, 9rem);
+    letter-spacing: 4px;
+    line-height: 0.9;
+    color: var(--text);
+  }
+
+  h1 .accent { color: var(--pivot); }
+
+  .subtitle {
+    margin-top: 16px;
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 400;
+    max-width: 540px;
+    margin-inline: auto;
+    line-height: 1.65;
+  }
+
+  /* ── Analogy ─────────────────────────────────────────────────────────────── */
+  .analogy-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--pivot);
+    border-radius: 6px;
+    padding: 20px 24px;
+    margin-bottom: 44px;
+    font-size: 0.9rem;
+    line-height: 1.75;
+    color: var(--muted);
+  }
+  .analogy-box strong { color: var(--text); }
+  .analogy-box .hl { color: var(--pivot); font-weight: 700; }
+
+  /* ── Concept cards ───────────────────────────────────────────────────────── */
+  .concept-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+    margin-bottom: 50px;
+  }
+
+  .concept-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 22px;
+    position: relative;
+    overflow: hidden;
+    transition: transform .18s, border-color .18s;
+  }
+
+  .concept-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .concept-card.red::before    { background: var(--pivot); }
+  .concept-card.cyan::before   { background: var(--left); }
+  .concept-card.yellow::before { background: var(--right); }
+  .concept-card.green::before  { background: var(--placed); }
+
+  .concept-card:hover { transform: translateY(-2px); border-color: #252b3f; }
+
+  .concept-icon { font-size: 1.8rem; margin-bottom: 10px; }
+  .concept-card h3 { font-size: .95rem; font-weight: 700; margin-bottom: 7px; }
+  .concept-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Steps ───────────────────────────────────────────────────────────────── */
+  .steps-section { margin-bottom: 50px; }
+
+  .steps-section h2 {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .steps-section h2 span { color: var(--pivot); }
+
+  .step-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .step-item { padding: 22px; border-right: 1px solid var(--border); background: var(--card); }
+  .step-item:last-child { border-right: none; }
+
+  .step-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: var(--border); line-height: 1; margin-bottom: 8px; }
+  .step-item h4 { font-size: .9rem; font-weight: 700; margin-bottom: 7px; color: var(--pivot); }
+  .step-item p { font-size: .78rem; color: var(--muted); line-height: 1.6; font-family: 'JetBrains Mono', monospace; }
+
+  /* ── Demo ────────────────────────────────────────────────────────────────── */
+  .demo-section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 44px;
+  }
+
+  .demo-header {
+    padding: 18px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .demo-header h2 { font-size: 1rem; font-weight: 700; letter-spacing: .5px; }
+
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+
+  button {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    padding: 8px 16px;
+    border-radius: 3px;
+    border: 1px solid;
+    cursor: pointer;
+    transition: all .15s;
+    letter-spacing: .5px;
+  }
+
+  .btn-primary { background: var(--pivot); color: #fff; border-color: var(--pivot); font-weight: 700; }
+  .btn-primary:hover { background: #d92d54; }
+  .btn-primary:disabled { opacity: .35; cursor: default; }
+  .btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
+  .btn-secondary:hover { border-color: #2e3550; background: var(--card); }
+
+  .speed-wrap {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+  }
+
+  input[type=range] {
+    -webkit-appearance: none; width: 70px; height: 3px;
+    background: var(--border); border-radius: 2px; outline: none;
+  }
+
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--pivot); cursor: pointer;
+  }
+
+  /* ── Call stack panel ────────────────────────────────────────────────────── */
+  .viz-wrap { padding: 24px 28px 0; display: flex; gap: 22px; flex-wrap: wrap; }
+
+  .bars-area { flex: 2; min-width: 260px; }
+  .stack-area { flex: 1; min-width: 180px; }
+
+  .panel-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
+  }
+
+  /* Bars */
+  .bars-wrap {
+    min-height: 190px; display: flex;
+    align-items: flex-end; gap: 5px;
+  }
+
+  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
+
+  .bar-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); transition: color .2s; }
+
+  .bar { width: 100%; border-radius: 3px 3px 0 0; transition: height .26s cubic-bezier(.4,0,.2,1), background .2s; }
+
+  .bar-idx { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #252b3f; margin-top: 3px; }
+
+  /* Partition markers */
+  .markers-row { display: flex; gap: 5px; margin-top: 5px; min-height: 18px; }
+
+  .marker-cell {
+    flex: 1; text-align: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px;
+    transition: color .2s;
+  }
+
+  /* Stack */
+  .stack-box {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 6px; overflow: hidden;
+    min-height: 200px;
+  }
+
+  .stack-box h4 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 1.5px;
+    color: var(--muted); text-transform: uppercase;
+    padding: 10px 14px; border-bottom: 1px solid var(--border);
+  }
+
+  .stack-list { padding: 10px 14px; display: flex; flex-direction: column-reverse; gap: 6px; }
+
+  .stack-frame {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 6px 10px; border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    transition: all .2s;
+  }
+
+  .stack-frame.active { border-color: var(--pivot); color: var(--pivot); background: #ff386412; }
+
+  /* Stats */
+  .stats-row {
+    display: flex;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-top: 20px;
+  }
+
+  .stat-box { flex: 1; padding: 13px 18px; border-right: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; }
+  .stat-box:last-child { border-right: none; }
+  .stat-label { font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 3px; }
+  .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--pivot); }
+  .stat-val.cyan   { color: var(--left); }
+  .stat-val.yellow { color: var(--right); }
+  .stat-val.green  { color: var(--placed); }
+
+  /* Array cells */
+  .array-section { padding: 14px 28px 18px; }
+  .arr-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
+  .array-display { display: flex; gap: 5px; flex-wrap: wrap; }
+
+  .arr-cell {
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
+    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
+    border: 2px solid var(--border); border-radius: 4px;
+    background: var(--card); transition: all .2s;
+  }
+
+  .arr-cell.pivot   { border-color: var(--pivot);  color: var(--pivot);  background: #ff386418; }
+  .arr-cell.left-z  { border-color: var(--left);   color: var(--left);   background: #00f5d418; }
+  .arr-cell.right-z { border-color: var(--right);  color: var(--right);  background: #fee44018; }
+  .arr-cell.swapping{ border-color: var(--swap);   color: var(--swap);   background: #f77f0018; }
+  .arr-cell.placed  { border-color: var(--placed); color: var(--placed); background: #38b00018; }
+  .arr-cell.active-range { border-color: #2a3050; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap;
+    padding: 10px 28px 18px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
+
+  /* Step explain */
+  .step-explain {
+    padding: 18px 28px; font-size: .88rem; line-height: 1.75;
+    color: var(--muted); min-height: 68px; border-top: 1px solid var(--border);
+  }
+
+  .step-explain strong { color: var(--text); }
+  .step-explain .hlp  { color: var(--pivot);  font-weight: 700; }
+  .step-explain .hll  { color: var(--left);   font-weight: 700; }
+  .step-explain .hlr  { color: var(--right);  font-weight: 700; }
+  .step-explain .hls  { color: var(--placed); font-weight: 700; }
+  .step-explain .hlw  { color: var(--swap);   font-weight: 700; }
+
+  /* Pseudocode */
+  .pseudo-section {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; overflow: hidden; margin-bottom: 44px;
+  }
+
+  .pseudo-header {
+    padding: 13px 22px; border-bottom: 1px solid var(--border);
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--muted); display: flex; gap: 8px; align-items: center;
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.r { background: #ff5f57; }
+  .dot.y { background: #ffbd2e; }
+  .dot.g { background: #28c840; }
+
+  pre {
+    padding: 22px;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px;
+    line-height: 2; overflow-x: auto; tab-size: 2;
+  }
+
+  .kw  { color: var(--pivot); }
+  .fn  { color: var(--left); }
+  .cm  { color: #252b3f; font-style: italic; }
+  .num { color: var(--placed); }
+  .op  { color: var(--right); }
+  .var { color: #c8d0e0; }
+
+  /* Complexity */
+  .complexity-row {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px; margin-bottom: 44px;
+  }
+
+  .comp-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 6px; padding: 20px 22px; text-align: center;
+  }
+
+  .comp-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  .comp-val { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; margin-bottom: 8px; }
+  .comp-desc { font-size: .76rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; line-height: 1.55; }
+
+  /* VS table */
+  .vs-section { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 44px; }
+  .vs-header { padding: 15px 22px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: .95rem; }
+  .vs-header span { color: var(--pivot); }
+
+  .vs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
+  .vs-table th { padding: 10px 16px; text-align: left; color: var(--muted); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
+  .vs-table td { padding: 9px 16px; border-bottom: 1px solid #090b12; }
+  .vs-table tr:last-child td { border-bottom: none; }
+  .vs-table td:first-child { color: var(--muted); }
+  .vs-table td:nth-child(2) { color: var(--pivot); }
+  .vs-table td:nth-child(3) { color: #c77dff88; }
+  .vs-table td:nth-child(4) { color: #ef476f66; }
+  .vs-table td:nth-child(5) { color: #ffd16666; }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: var(--card); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  @media (max-width: 600px) {
+    .step-cards { grid-template-columns: 1fr 1fr; }
+    .step-item { border-bottom: 1px solid var(--border); }
+    .stats-row { flex-wrap: wrap; }
+    .stat-box { min-width: 50%; }
+    .viz-wrap { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="badge">Algoritmos de Ordenación</div>
+    <h1>QUICK<br><span class="accent">SORT.</span></h1>
+    <p class="subtitle">El algoritmo más usado en la práctica. Elige un pivote, parte el array en dos zonas y ordena cada zona recursivamente.</p>
+  </header>
+
+  <div class="analogy-box">
+    🎯 <strong>Piénsalo como organizar una fila de personas por altura:</strong> eliges a una persona como <span class="hl">pivote</span>. Los más bajos se van a su izquierda, los más altos a su derecha. Luego repites lo mismo en cada grupo. Al final todos están en su sitio sin haber movido a nadie más de lo necesario.
+  </div>
+
+  <div class="concept-row">
+    <div class="concept-card red">
+      <div class="concept-icon">🎯</div>
+      <h3>El pivote</h3>
+      <p>Un elemento elegido que queda en su <strong>posición definitiva</strong> tras la partición. Todo lo menor queda a su izquierda, todo lo mayor a su derecha.</p>
+    </div>
+    <div class="concept-card cyan">
+      <div class="concept-icon">↔️</div>
+      <h3>La partición</h3>
+      <p>El núcleo del algoritmo. Recorre el array con dos punteros (i, j) e <strong>intercambia elementos</strong> hasta colocar el pivote en su sitio.</p>
+    </div>
+    <div class="concept-card yellow">
+      <div class="concept-icon">🌳</div>
+      <h3>Recursión</h3>
+      <p>Aplica quickSort a la <strong>subarray izquierda</strong> (menores) y a la <strong>subarray derecha</strong> (mayores) hasta que cada trozo tiene 1 elemento.</p>
+    </div>
+    <div class="concept-card green">
+      <div class="concept-icon">🚀</div>
+      <h3>O(1) espacio extra</h3>
+      <p>A diferencia de Merge Sort, <strong>ordena en sitio</strong>. No necesita array auxiliar. Por eso domina en la práctica (C, Java, Python lo usan).</p>
+    </div>
+  </div>
+
+  <div class="steps-section">
+    <h2>¿Cómo <span>funciona</span>?</h2>
+    <div class="step-cards">
+      <div class="step-item">
+        <div class="step-num">01</div>
+        <h4>Elegir pivote</h4>
+        <p>Elige un pivote (ej: el último elemento). Su objetivo: llegar a su posición final correcta en el array ordenado.</p>
+      </div>
+      <div class="step-item">
+        <div class="step-num">02</div>
+        <h4>Particionar</h4>
+        <p>Recorre con puntero i. Si arr[j] ≤ pivote, incrementa i e intercambia arr[i] con arr[j]. El pivote separa menores de mayores.</p>
+      </div>
+      <div class="step-item">
+        <div class="step-num">03</div>
+        <h4>Colocar pivote</h4>
+        <p>Al terminar, coloca el pivote en arr[i+1]. Ese índice es su posición DEFINITIVA. Ya nunca se moverá.</p>
+      </div>
+      <div class="step-item">
+        <div class="step-num">04</div>
+        <h4>Recursión</h4>
+        <p>Llama a quickSort en [lo..pivotIdx-1] y [pivotIdx+1..hi]. Cada llamada coloca otro pivote en su sitio.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Demo -->
+  <div class="demo-section">
+    <div class="demo-header">
+      <h2>🎮 Visualización Interactiva</h2>
+      <div class="controls">
+        <div class="speed-wrap">
+          Vel.
+          <input type="range" id="speedSlider" min="100" max="1400" value="700" step="100">
+        </div>
+        <button class="btn-secondary" id="btnShuffle">🔀 Mezclar</button>
+        <button class="btn-secondary" id="btnReset">↺ Reset</button>
+        <button class="btn-primary" id="btnStep">Paso →</button>
+        <button class="btn-primary" id="btnAuto">▶ Auto</button>
+      </div>
+    </div>
+
+    <div class="viz-wrap">
+      <!-- Bars -->
+      <div class="bars-area">
+        <div class="panel-title">Barras — estado del array</div>
+        <div class="bars-wrap" id="barsWrap"></div>
+        <div class="markers-row" id="markersRow"></div>
+      </div>
+
+      <!-- Call stack -->
+      <div class="stack-area">
+        <div class="panel-title">Pila de llamadas recursivas</div>
+        <div class="stack-box">
+          <h4>Call Stack</h4>
+          <div class="stack-list" id="stackList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row">
+      <div class="stat-box">
+        <div class="stat-label">Comparaciones</div>
+        <div class="stat-val" id="statComp">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Intercambios</div>
+        <div class="stat-val cyan" id="statSwap">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Pivotes colocados</div>
+        <div class="stat-val yellow" id="statPivots">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Llamadas</div>
+        <div class="stat-val green" id="statCalls">0</div>
+      </div>
+    </div>
+
+    <!-- Array cells -->
+    <div class="array-section">
+      <div class="arr-label">Array actual</div>
+      <div class="array-display" id="arrayDisplay"></div>
+    </div>
+
+    <!-- Legend -->
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--pivot)"></div> Pivote</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--left)"></div> Zona ≤ pivote</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--right)"></div> Zona > pivote</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--swap)"></div> Intercambiando</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--placed)"></div> Pivote fijo ✓</div>
+    </div>
+
+    <div class="step-explain" id="stepExplain">
+      Pulsa <strong>Paso →</strong> para ver cómo el pivote encuentra su posición definitiva, o <strong>▶ Auto</strong> para la animación completa.
+    </div>
+  </div>
+
+  <!-- Complexity -->
+  <div style="margin-bottom:18px;">
+    <h2 style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:2px; margin-bottom:18px;">
+      Complejidad <span style="color:var(--pivot)">Temporal</span>
+    </h2>
+  </div>
+  <div class="complexity-row">
+    <div class="comp-card">
+      <div class="comp-label">Mejor caso</div>
+      <div class="comp-val" style="color:var(--placed)">O(n log n)</div>
+      <div class="comp-desc">El pivote siempre cae en el centro. El árbol queda perfectamente balanceado con log₂(n) niveles.</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-label">Caso medio</div>
+      <div class="comp-val" style="color:var(--placed)">O(n log n)</div>
+      <div class="comp-desc">En media estadística, el pivote divide razonablemente bien. Más rápido que Merge Sort en práctica (menos memoria).</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-label">Peor caso</div>
+      <div class="comp-val" style="color:var(--pivot)">O(n²)</div>
+      <div class="comp-desc">Si siempre elegimos el mínimo/máximo como pivote (array ya ordenado). Se evita con pivote aleatorio o mediana de 3.</div>
+    </div>
+    <div class="comp-card">
+      <div class="comp-label">Espacio</div>
+      <div class="comp-val" style="color:var(--left)">O(log n)</div>
+      <div class="comp-desc">Solo usa la pila de recursión. Mucho mejor que Merge Sort O(n). En el peor caso la pila llega a O(n).</div>
+    </div>
+  </div>
+
+  <!-- VS table -->
+  <div class="vs-section">
+    <div class="vs-header">Los cinco algoritmos <span>comparados</span></div>
+    <table class="vs-table">
+      <thead>
+        <tr><th>Característica</th><th>Quick Sort</th><th>Merge Sort</th><th>Burbuja</th><th>Inserción</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Mejor caso</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n) ✅</td><td>O(n) ✅</td></tr>
+        <tr><td>Peor caso</td><td>O(n²) ⚠️</td><td>O(n log n) ✅</td><td>O(n²)</td><td>O(n²)</td></tr>
+        <tr><td>Espacio extra</td><td>O(log n) ✅</td><td>O(n)</td><td>O(1) ✅</td><td>O(1) ✅</td></tr>
+        <tr><td>Estable</td><td>No ❌</td><td>Sí ✅</td><td>Sí ✅</td><td>Sí ✅</td></tr>
+        <tr><td>En práctica</td><td>El más rápido ✅✅</td><td>Muy rápido</td><td>Lento</td><td>Bueno (n pequeño)</td></tr>
+        <tr><td>Usado en</td><td>C, C++, Java stdlib</td><td>Python, Java (estable)</td><td>Educación</td><td>Timsort (pequeños)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pseudocode -->
+  <div class="pseudo-section">
+    <div class="pseudo-header">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      &nbsp;&nbsp; quicksort.pseudo
+    </div>
+    <pre><span class="kw">función</span> <span class="fn">quickSort</span>(arr, lo, hi):
+  <span class="kw">si</span> lo <span class="op">&lt;</span> hi:
+    <span class="var">p</span> = <span class="fn">particionar</span>(arr, lo, hi)
+    <span class="fn">quickSort</span>(arr, lo, <span class="var">p</span> <span class="op">- 1</span>)   <span class="cm">// recursión izquierda</span>
+    <span class="fn">quickSort</span>(arr, <span class="var">p</span> <span class="op">+ 1</span>, hi)   <span class="cm">// recursión derecha</span>
+
+
+<span class="kw">función</span> <span class="fn">particionar</span>(arr, lo, hi):
+  <span class="var">pivote</span> = arr[hi]              <span class="cm">// último elemento como pivote</span>
+  <span class="var">i</span> = lo <span class="op">- 1</span>                  <span class="cm">// índice de la zona ≤ pivote</span>
+
+  <span class="kw">para</span> <span class="var">j</span> <span class="kw">desde</span> lo <span class="kw">hasta</span> hi<span class="op">-1</span>:
+    <span class="kw">si</span> arr[<span class="var">j</span>] <span class="op">&lt;=</span> <span class="var">pivote</span>:
+      <span class="var">i</span><span class="op">++</span>
+      intercambiar(arr[<span class="var">i</span>], arr[<span class="var">j</span>])  <span class="cm">// lleva el menor a zona izq.</span>
+
+  <span class="cm">// coloca el pivote en su sitio definitivo</span>
+  intercambiar(arr[<span class="var">i</span><span class="op">+1</span>], arr[hi])
+  <span class="kw">devolver</span> <span class="var">i</span> <span class="op">+ 1</span>               <span class="cm">// índice final del pivote</span></pre>
+  </div>
+
+</div>
+
+<script>
+// ─── Data ─────────────────────────────────────────────────────────────────────
+const DEFAULT_ARR = [10, 80, 30, 90, 40, 50, 70];
+let arr = [...DEFAULT_ARR];
+
+// ─── Pre-compute all steps ────────────────────────────────────────────────────
+function buildSteps(inputArr) {
+  const steps = [];
+  const a = [...inputArr];
+  let comparisons = 0, swaps = 0, pivotsPlaced = 0, calls = 0;
+  const placedIdxs = new Set();
+  const callStack = [];  // [{lo, hi}]
+
+  function addStep(type, pivotIdx, lo, hi, iPtr, jPtr, swapPair, msg) {
+    steps.push({
+      type,
+      arr: [...a],
+      pivotIdx,
+      lo, hi,
+      iPtr, jPtr,
+      swapPair: swapPair ? [...swapPair] : [],
+      msg,
+      comparisons,
+      swaps,
+      pivotsPlaced,
+      calls,
+      placed: new Set(placedIdxs),
+      stack: callStack.map(f => ({ ...f }))
+    });
+  }
+
+  function partition(lo, hi) {
+    const pivotVal = a[hi];
+    let i = lo - 1;
+
+    addStep('pivot_chosen', hi, lo, hi, i, lo,  [], 
+      `<span class="hlp">Pivote = ${pivotVal}</span> (posición ${hi}). Iniciamos partición en [${lo}..${hi}]. Puntero i = ${i} (zona ≤ pivote vacía).`);
+
+    for (let j = lo; j < hi; j++) {
+      comparisons++;
+      const cmp = a[j] <= pivotVal;
+
+      addStep('compare', hi, lo, hi, i, j, [],
+        `Comparamos <span class="hll">arr[${j}]=${a[j]}</span> con pivote <span class="hlp">${pivotVal}</span>. ¿${a[j]} ≤ ${pivotVal}? <strong>${cmp ? '¡Sí! Intercambiamos.' : 'No. j avanza.'}</strong>`);
+
+      if (cmp) {
+        i++;
+        if (i !== j) {
+          swaps++;
+          [a[i], a[j]] = [a[j], a[i]];
+          addStep('swap', hi, lo, hi, i, j, [i, j],
+            `↔️ Intercambiamos <span class="hlw">arr[${i}]=${a[i]}</span> ↔ <span class="hlw">arr[${j}]=${a[j]}</span>. La zona ≤ pivote crece hasta índice ${i}.`);
+        } else {
+          addStep('no_swap', hi, lo, hi, i, j, [],
+            `arr[${j}] ya está en la zona correcta (i=j=${i}). Solo avanzamos i → ${i}.`);
+        }
+      }
+    }
+
+    // Place pivot
+    swaps++;
+    [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
+    pivotsPlaced++;
+    placedIdxs.add(i + 1);
+
+    addStep('pivot_placed', i + 1, lo, hi, i + 1, hi, [i + 1, hi],
+      `✅ Colocamos el pivote <span class="hlp">${pivotVal}</span> en su posición definitiva: índice <strong>${i + 1}</strong>. ¡Ya nunca se moverá!`);
+
+    return i + 1;
+  }
+
+  function quickSort(lo, hi) {
+    if (lo >= hi) {
+      if (lo === hi) {
+        placedIdxs.add(lo);
+        addStep('base', lo, lo, hi, -1, -1, [],
+          `Subarray de 1 elemento [${a[lo]}] → caso base, ya ordenado.`);
+      }
+      return;
+    }
+
+    calls++;
+    callStack.push({ lo, hi });
+
+    addStep('call', -1, lo, hi, -1, -1, [],
+      `Nueva llamada quickSort(<span class="hll">${lo}</span>, <span class="hlr">${hi}</span>) → subarray [${a.slice(lo, hi + 1).join(', ')}]`);
+
+    const p = partition(lo, hi);
+
+    callStack.pop();
+
+    quickSort(lo, p - 1);
+    quickSort(p + 1, hi);
+  }
+
+  quickSort(0, a.length - 1);
+
+  addStep('done', -1, 0, a.length - 1, -1, -1, [],
+    `🎉 <span class="hls">¡Ordenación completada!</span> <strong>${comparisons} comparaciones</strong>, <strong>${swaps} intercambios</strong>, <strong>${pivotsPlaced} pivotes colocados</strong>.`);
+
+  return steps;
+}
+
+// ─── Render ───────────────────────────────────────────────────────────────────
+function renderBars(state) {
+  const wrap = document.getElementById('barsWrap');
+  const maxH = 175;
+  const maxVal = Math.max(...state.arr);
+
+  wrap.innerHTML = state.arr.map((v, i) => {
+    const isPlaced = state.placed.has(i);
+    const isPivot  = i === state.pivotIdx && !isPlaced;
+    const isSwap   = state.swapPair.includes(i);
+    const inRange  = i >= state.lo && i <= state.hi;
+    const isLeft   = inRange && i <= state.iPtr && !isPivot && !isSwap;
+    const isRight  = inRange && i > state.iPtr && i < state.pivotIdx && !isSwap;
+    const isDone   = state.type === 'done';
+
+    let bg = '#1e1e32';
+    if (isDone || isPlaced) bg = 'var(--placed)';
+    else if (isSwap)   bg = 'var(--swap)';
+    else if (isPivot)  bg = 'var(--pivot)';
+    else if (isLeft)   bg = 'var(--left)';
+    else if (isRight)  bg = 'var(--right)';
+    else if (inRange)  bg = '#1e2a3a';
+
+    const valColor = isDone || isPlaced ? 'var(--placed)' : isSwap ? 'var(--swap)' : isPivot ? 'var(--pivot)' : isLeft ? 'var(--left)' : isRight ? 'var(--right)' : 'var(--muted)';
+    const h = Math.max(14, Math.round((v / maxVal) * maxH));
+
+    return `<div class="bar-col">
+      <div class="bar-val" style="color:${valColor}">${v}</div>
+      <div class="bar" style="height:${h}px;background:${bg}"></div>
+      <div class="bar-idx">[${i}]</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMarkers(state) {
+  const row = document.getElementById('markersRow');
+  row.innerHTML = state.arr.map((_, i) => {
+    let label = '', color = 'transparent';
+    if (i === state.pivotIdx && state.type !== 'done') { label = 'piv'; color = 'var(--pivot)'; }
+    if (i === state.iPtr && state.iPtr >= 0) { label = label ? label + '/i' : 'i'; color = 'var(--left)'; }
+    if (i === state.jPtr && state.jPtr >= 0 && i !== state.iPtr) { label = 'j'; color = 'var(--right)'; }
+    return `<div class="marker-cell" style="color:${color}">${label}</div>`;
+  }).join('');
+}
+
+function renderStack(state) {
+  const list = document.getElementById('stackList');
+  if (!state.stack || state.stack.length === 0) {
+    list.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:4px 0;">(vacía)</div>`;
+    return;
+  }
+  list.innerHTML = state.stack.map((f, idx) => {
+    const isTop = idx === state.stack.length - 1;
+    return `<div class="stack-frame ${isTop ? 'active' : ''}">
+      quickSort(${f.lo}, ${f.hi})
+    </div>`;
+  }).join('');
+}
+
+function renderCells(state) {
+  const disp = document.getElementById('arrayDisplay');
+  disp.innerHTML = state.arr.map((v, i) => {
+    const isPlaced = state.placed.has(i);
+    const isPivot  = i === state.pivotIdx && !isPlaced;
+    const isSwap   = state.swapPair.includes(i);
+    const inRange  = i >= state.lo && i <= state.hi;
+    const isLeft   = inRange && i <= state.iPtr && !isPivot && !isSwap;
+    const isRight  = inRange && i > state.iPtr && i < state.pivotIdx && !isSwap;
+    const isDone   = state.type === 'done';
+    let cls = '';
+    if (isDone || isPlaced) cls = 'placed';
+    else if (isSwap)   cls = 'swapping';
+    else if (isPivot)  cls = 'pivot';
+    else if (isLeft)   cls = 'left-z';
+    else if (isRight)  cls = 'right-z';
+    else if (inRange)  cls = 'active-range';
+    return `<div class="arr-cell ${cls}">${v}</div>`;
+  }).join('');
+}
+
+function renderStats(state) {
+  document.getElementById('statComp').textContent   = state.comparisons;
+  document.getElementById('statSwap').textContent   = state.swaps;
+  document.getElementById('statPivots').textContent = state.pivotsPlaced;
+  document.getElementById('statCalls').textContent  = state.calls;
+}
+
+function renderAll(state) {
+  renderBars(state);
+  renderMarkers(state);
+  renderStack(state);
+  renderCells(state);
+  renderStats(state);
+  document.getElementById('stepExplain').innerHTML = state.msg;
+}
+
+// ─── Control ──────────────────────────────────────────────────────────────────
+let steps = [], stepIdx = 0, autoTimer = null, done = false;
+
+function initState() {
+  steps = buildSteps(arr);
+  stepIdx = 0;
+  done = false;
+  clearInterval(autoTimer); autoTimer = null;
+  document.getElementById('btnAuto').textContent = '▶ Auto';
+  document.getElementById('btnStep').disabled = false;
+  document.getElementById('btnAuto').disabled = false;
+
+  renderAll({
+    type: 'init', arr: [...arr], pivotIdx: -1,
+    lo: -1, hi: -1, iPtr: -1, jPtr: -1, swapPair: [],
+    comparisons: 0, swaps: 0, pivotsPlaced: 0, calls: 0,
+    placed: new Set(), stack: [],
+    msg: `Pulsa <strong>Paso →</strong> para ver cómo el pivote encuentra su posición definitiva, o <strong>▶ Auto</strong> para la animación completa.`
+  });
+}
+
+function step() {
+  if (done || stepIdx >= steps.length) return;
+  renderAll(steps[stepIdx]);
+  stepIdx++;
+  if (stepIdx >= steps.length) {
+    done = true;
+    document.getElementById('btnStep').disabled = true;
+    document.getElementById('btnAuto').disabled = true;
+    clearInterval(autoTimer); autoTimer = null;
+    document.getElementById('btnAuto').textContent = '▶ Auto';
+  }
+}
+
+document.getElementById('btnStep').addEventListener('click', step);
+
+document.getElementById('btnAuto').addEventListener('click', function () {
+  if (autoTimer) {
+    clearInterval(autoTimer); autoTimer = null;
+    this.textContent = '▶ Auto';
+  } else {
+    const speed = 1600 - parseInt(document.getElementById('speedSlider').value);
+    this.textContent = '⏸ Pausa';
+    autoTimer = setInterval(() => {
+      step();
+      if (done) {
+        clearInterval(autoTimer); autoTimer = null;
+        document.getElementById('btnAuto').textContent = '▶ Auto';
+      }
+    }, speed);
+  }
+});
+
+document.getElementById('btnReset').addEventListener('click', () => { arr = [...DEFAULT_ARR]; initState(); });
+
+document.getElementById('btnShuffle').addEventListener('click', () => {
+  const pool = [10, 20, 30, 40, 50, 60, 70, 80, 90, 15, 35, 55];
+  arr = pool.sort(() => Math.random() - 0.5).slice(0, 7);
+  initState();
+});
+
+initState();
+</script>
+</body>
+</html>
