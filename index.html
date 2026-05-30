@@ -759,7 +759,7 @@ const DEFAULT_ARR=[10,80,30,90,40,50,70];
 const POOL=[10,20,30,40,50,60,70,80,90,15,35,55];
 function shuffle(s){return[...s].sort(()=>Math.random()-.5).slice(0,7);}
 
-// ── Build steps ────────────────────────────────────────────────────────────
+// - Build steps -
 function buildSteps(input){
   const steps=[], a=[...input];
   let comps=0,swaps=0,pivots=0,calls=0;
@@ -840,7 +840,7 @@ function buildSteps(input){
   return steps;
 }
 
-// ── Get cell class ─────────────────────────────────────────────────────────
+// - Get cell class -
 function getCellCls(i,s){
   if(s.placed.has(i)) return 'plc';
   if(s.swapPair.includes(i)) return 'swp';
@@ -851,7 +851,7 @@ function getCellCls(i,s){
   return '';
 }
 
-// ── Render mini bars ───────────────────────────────────────────────────────
+// - Render mini bars -
 function renderFMini(s){
   const maxV=Math.max(...s.arr);
   document.getElementById('fMiniB').innerHTML=s.arr.map((v,i)=>{
@@ -901,7 +901,7 @@ function applyFlow(s){
   document.getElementById('fExplain').innerHTML=s.msg;
 }
 
-// ══ FLOW VIZ ══════════════════════════════════════════════════════════════
+// - FLOW VIZ -
 let fArr=[...DEFAULT_ARR],fSteps=null,fTimer=null,fDone=false,fN=0,fIdx=0;
 
 function fStep(){
@@ -911,12 +911,12 @@ function fStep(){
   document.getElementById('f-ctr').textContent='paso '+fN;
   if(fIdx>=fSteps.length){fDone=true;document.getElementById('f-step').disabled=true;fStopAuto();}
 }
-function fStopAuto(){clearInterval(fTimer);fTimer=null;document.getElementById('f-auto').textContent='▶ Auto';if(fDone)document.getElementById('f-auto').disabled=true;}
+function fStopAuto(){clearInterval(fTimer);fTimer=null;document.getElementById('f-auto').textContent='Auto Auto';if(fDone)document.getElementById('f-auto').disabled=true;}
 function fReset(a){
   fStopAuto();fDone=false;fN=0;fIdx=0;fArr=a||[...DEFAULT_ARR];
   fSteps=buildSteps(fArr);
   document.getElementById('f-step').disabled=false;document.getElementById('f-auto').disabled=false;
-  document.getElementById('f-auto').textContent='▶ Auto';document.getElementById('f-ctr').textContent='paso 0';
+  document.getElementById('f-auto').textContent='Auto Auto';document.getElementById('f-ctr').textContent='paso 0';
   document.querySelectorAll('#pseudoBlock .code-line').forEach(el=>el.classList.remove('active'));
   document.getElementById('fExplain').innerHTML='Pulsa <b>Paso →</b> para seguir la ejecución. La pila de llamadas muestra la recursión activa en rojo.';
   document.getElementById('fStack').innerHTML='<div class="cs-empty">(vacía)</div>';
@@ -929,9 +929,9 @@ function fReset(a){
 document.getElementById('f-step').addEventListener('click',fStep);
 document.getElementById('f-reset').addEventListener('click',()=>fReset());
 document.getElementById('f-shuffle').addEventListener('click',()=>fReset(shuffle(POOL)));
-document.getElementById('f-auto').addEventListener('click',function(){if(fTimer){fStopAuto();}else{this.textContent='⏸ Pausa';const sp=1700-parseInt(document.getElementById('fSp').value);fTimer=setInterval(()=>{fStep();if(fDone)fStopAuto();},sp);}});
+document.getElementById('f-auto').addEventListener('click',function(){if(fTimer){fStopAuto();}else{this.textContent=' Pausa';const sp=1700-parseInt(document.getElementById('fSp').value);fTimer=setInterval(()=>{fStep();if(fDone)fStopAuto();},sp);}});
 
-// ══ CLASSIC VIZ ═══════════════════════════════════════════════════════════
+// - CLASSIC VIZ -
 let cArr=[...DEFAULT_ARR],cSteps=null,cTimer=null,cDone=false,cIdx=0,cLogN=0;
 
 function renderClassic(s){
@@ -970,12 +970,12 @@ function renderClassic(s){
 function addCLog(msg){const log=document.getElementById('cLog');const d=document.createElement('div');d.className='ls';d.innerHTML=`<span style="color:var(--muted2)">[${String(cLogN).padStart(2,'0')}]</span> ${msg.replace(/<[^>]*>/g,'')}`;log.appendChild(d);log.scrollTop=log.scrollHeight;cLogN++;}
 
 function cStep(){if(cDone||!cSteps)return;if(cIdx>=cSteps.length){cDone=true;cStopAuto();return;}const s=cSteps[cIdx];cIdx++;renderClassic(s);document.getElementById('cExplain').innerHTML=s.msg;addCLog(s.msg);if(cIdx>=cSteps.length){cDone=true;document.getElementById('c-step').disabled=true;cStopAuto();}}
-function cStopAuto(){clearInterval(cTimer);cTimer=null;document.getElementById('c-auto').textContent='▶ Auto';if(cDone)document.getElementById('c-auto').disabled=true;}
+function cStopAuto(){clearInterval(cTimer);cTimer=null;document.getElementById('c-auto').textContent='Auto Auto';if(cDone)document.getElementById('c-auto').disabled=true;}
 function cReset(a){
   cStopAuto();cDone=false;cIdx=0;cLogN=0;cArr=a||[...DEFAULT_ARR];
   cSteps=buildSteps(cArr);
   document.getElementById('c-step').disabled=false;document.getElementById('c-auto').disabled=false;
-  document.getElementById('c-auto').textContent='▶ Auto';
+  document.getElementById('c-auto').textContent='Auto Auto';
   document.getElementById('cExplain').innerHTML='Pulsa <strong>Paso →</strong> para ver cómo el pivote encuentra su posición definitiva.';
   document.getElementById('cLog').innerHTML='';
   renderClassic({arr:cArr,pivIdx:-1,lo:-1,hi:-1,iPtr:-1,jPtr:-1,swapPair:[],placed:new Set(),stack:[],comps:0,swaps:0,pivots:0,calls:0});
@@ -983,9 +983,9 @@ function cReset(a){
 document.getElementById('c-step').addEventListener('click',cStep);
 document.getElementById('c-reset').addEventListener('click',()=>cReset());
 document.getElementById('c-shuffle').addEventListener('click',()=>cReset(shuffle(POOL)));
-document.getElementById('c-auto').addEventListener('click',function(){if(cTimer){cStopAuto();}else{this.textContent='⏸ Pausa';const sp=1600-parseInt(document.getElementById('cSp').value);cTimer=setInterval(()=>{cStep();if(cDone)cStopAuto();},sp);}});
+document.getElementById('c-auto').addEventListener('click',function(){if(cTimer){cStopAuto();}else{this.textContent=' Pausa';const sp=1600-parseInt(document.getElementById('cSp').value);cTimer=setInterval(()=>{cStep();if(cDone)cStopAuto();},sp);}});
 
-// ── Navbar ────────────────────────────────────────────────────────────────
+// - Navbar -
 const SECS=['hero','concepto','pasos','flujo-datos','visualizador','pseudocodigo','complejidad','comparacion'];
 window.addEventListener('scroll',()=>{let cur='';SECS.forEach(id=>{const el=document.getElementById(id);if(el&&window.scrollY>=el.offsetTop-80)cur=id;});document.querySelectorAll('.nav-link').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));},{passive:true});
 
