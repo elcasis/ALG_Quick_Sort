@@ -818,7 +818,7 @@ function buildSteps(input){
     }
     calls++;
     callStack.push({lo,hi});
-    addStep(['fn'],−1,lo,hi,-1,-1,[],−1,
+    addStep(['fn'],-1,lo,hi,-1,-1,[],-1,
       `<b>Línea 1:</b> quickSort(<span class="hll">${lo}</span>, <span class="hlr">${hi}</span>) → [${a.slice(lo,hi+1).join(', ')}]`);
 
     const p=partition(lo,hi);
