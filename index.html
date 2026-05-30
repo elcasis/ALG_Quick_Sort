@@ -3,901 +3,993 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Quick Sort — Aprende el algoritmo</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Bebas+Neue&family=Barlow:wght@400;600;800&display=swap" rel="stylesheet">
+<title>Quick Sort — Guía Completa</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #05060a;
-    --surface: #090b12;
-    --card: #0e1119;
-    --border: #181d2e;
-    --pivot:   #ff3864;
-    --left:    #00f5d4;
-    --right:   #fee440;
-    --placed:  #38b000;
-    --swap:    #f77f00;
-    --text:    #e8ecf4;
-    --muted:   #5a6278;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Barlow', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* Animated grid background */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(#181d2e55 1px, transparent 1px),
-      linear-gradient(90deg, #181d2e55 1px, transparent 1px);
-    background-size: 32px 32px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background:
-      radial-gradient(ellipse 60% 50% at 5% 0%,   #ff386420 0%, transparent 50%),
-      radial-gradient(ellipse 50% 40% at 95% 100%, #00f5d420 0%, transparent 50%),
-      radial-gradient(ellipse 40% 30% at 50% 50%,  #fee44008 0%, transparent 60%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container {
-    position: relative;
-    z-index: 1;
-    max-width: 1080px;
-    margin: 0 auto;
-    padding: 40px 20px 90px;
-  }
-
-  /* ── Header ─────────────────────────────────────────────────────────────── */
-  header { text-align: center; margin-bottom: 52px; }
-
-  .badge {
-    display: inline-block;
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: var(--pivot);
-    border: 1px solid var(--pivot);
-    padding: 4px 14px;
-    border-radius: 2px;
-    text-transform: uppercase;
-    margin-bottom: 22px;
-  }
-
-  h1 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(4rem, 12vw, 9rem);
-    letter-spacing: 4px;
-    line-height: 0.9;
-    color: var(--text);
-  }
-
-  h1 .accent { color: var(--pivot); }
-
-  .subtitle {
-    margin-top: 16px;
-    color: var(--muted);
-    font-size: 1rem;
-    font-weight: 400;
-    max-width: 540px;
-    margin-inline: auto;
-    line-height: 1.65;
-  }
-
-  /* ── Analogy ─────────────────────────────────────────────────────────────── */
-  .analogy-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-left: 3px solid var(--pivot);
-    border-radius: 6px;
-    padding: 20px 24px;
-    margin-bottom: 44px;
-    font-size: 0.9rem;
-    line-height: 1.75;
-    color: var(--muted);
-  }
-  .analogy-box strong { color: var(--text); }
-  .analogy-box .hl { color: var(--pivot); font-weight: 700; }
-
-  /* ── Concept cards ───────────────────────────────────────────────────────── */
-  .concept-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 14px;
-    margin-bottom: 50px;
-  }
-
-  .concept-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 22px;
-    position: relative;
-    overflow: hidden;
-    transition: transform .18s, border-color .18s;
-  }
-
-  .concept-card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 2px;
-  }
-
-  .concept-card.red::before    { background: var(--pivot); }
-  .concept-card.cyan::before   { background: var(--left); }
-  .concept-card.yellow::before { background: var(--right); }
-  .concept-card.green::before  { background: var(--placed); }
-
-  .concept-card:hover { transform: translateY(-2px); border-color: #252b3f; }
-
-  .concept-icon { font-size: 1.8rem; margin-bottom: 10px; }
-  .concept-card h3 { font-size: .95rem; font-weight: 700; margin-bottom: 7px; }
-  .concept-card p { font-size: .8rem; color: var(--muted); line-height: 1.65; font-family: 'JetBrains Mono', monospace; }
-
-  /* ── Steps ───────────────────────────────────────────────────────────────── */
-  .steps-section { margin-bottom: 50px; }
-
-  .steps-section h2 {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.4rem;
-    letter-spacing: 2px;
-    margin-bottom: 20px;
-  }
-
-  .steps-section h2 span { color: var(--pivot); }
-
-  .step-cards {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .step-item { padding: 22px; border-right: 1px solid var(--border); background: var(--card); }
-  .step-item:last-child { border-right: none; }
-
-  .step-num { font-family: 'Bebas Neue', sans-serif; font-size: 2.8rem; color: var(--border); line-height: 1; margin-bottom: 8px; }
-  .step-item h4 { font-size: .9rem; font-weight: 700; margin-bottom: 7px; color: var(--pivot); }
-  .step-item p { font-size: .78rem; color: var(--muted); line-height: 1.6; font-family: 'JetBrains Mono', monospace; }
-
-  /* ── Demo ────────────────────────────────────────────────────────────────── */
-  .demo-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    overflow: hidden;
-    margin-bottom: 44px;
-  }
-
-  .demo-header {
-    padding: 18px 28px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .demo-header h2 { font-size: 1rem; font-weight: 700; letter-spacing: .5px; }
-
-  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-
-  button {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 8px 16px;
-    border-radius: 3px;
-    border: 1px solid;
-    cursor: pointer;
-    transition: all .15s;
-    letter-spacing: .5px;
-  }
-
-  .btn-primary { background: var(--pivot); color: #fff; border-color: var(--pivot); font-weight: 700; }
-  .btn-primary:hover { background: #d92d54; }
-  .btn-primary:disabled { opacity: .35; cursor: default; }
-  .btn-secondary { background: transparent; color: var(--text); border-color: var(--border); }
-  .btn-secondary:hover { border-color: #2e3550; background: var(--card); }
-
-  .speed-wrap {
-    display: flex; align-items: center; gap: 8px;
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
-  }
-
-  input[type=range] {
-    -webkit-appearance: none; width: 70px; height: 3px;
-    background: var(--border); border-radius: 2px; outline: none;
-  }
-
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 12px; height: 12px;
-    border-radius: 50%; background: var(--pivot); cursor: pointer;
-  }
-
-  /* ── Call stack panel ────────────────────────────────────────────────────── */
-  .viz-wrap { padding: 24px 28px 0; display: flex; gap: 22px; flex-wrap: wrap; }
-
-  .bars-area { flex: 2; min-width: 260px; }
-  .stack-area { flex: 1; min-width: 180px; }
-
-  .panel-title {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; letter-spacing: 1.5px;
-    color: var(--muted); text-transform: uppercase; margin-bottom: 12px;
-  }
-
-  /* Bars */
-  .bars-wrap {
-    min-height: 190px; display: flex;
-    align-items: flex-end; gap: 5px;
-  }
-
-  .bar-col { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
-
-  .bar-val { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); transition: color .2s; }
-
-  .bar { width: 100%; border-radius: 3px 3px 0 0; transition: height .26s cubic-bezier(.4,0,.2,1), background .2s; }
-
-  .bar-idx { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #252b3f; margin-top: 3px; }
-
-  /* Partition markers */
-  .markers-row { display: flex; gap: 5px; margin-top: 5px; min-height: 18px; }
-
-  .marker-cell {
-    flex: 1; text-align: center;
-    font-family: 'JetBrains Mono', monospace; font-size: 9px;
-    transition: color .2s;
-  }
-
-  /* Stack */
-  .stack-box {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 6px; overflow: hidden;
-    min-height: 200px;
-  }
-
-  .stack-box h4 {
-    font-family: 'JetBrains Mono', monospace;
-    font-size: 10px; letter-spacing: 1.5px;
-    color: var(--muted); text-transform: uppercase;
-    padding: 10px 14px; border-bottom: 1px solid var(--border);
-  }
-
-  .stack-list { padding: 10px 14px; display: flex; flex-direction: column-reverse; gap: 6px; }
-
-  .stack-frame {
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    padding: 6px 10px; border-radius: 3px;
-    border: 1px solid var(--border);
-    background: var(--surface);
-    transition: all .2s;
-  }
-
-  .stack-frame.active { border-color: var(--pivot); color: var(--pivot); background: #ff386412; }
-
-  /* Stats */
-  .stats-row {
-    display: flex;
-    border-top: 1px solid var(--border);
-    border-bottom: 1px solid var(--border);
-    margin-top: 20px;
-  }
-
-  .stat-box { flex: 1; padding: 13px 18px; border-right: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; }
-  .stat-box:last-child { border-right: none; }
-  .stat-label { font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 3px; }
-  .stat-val { font-size: 1.4rem; font-weight: 700; color: var(--pivot); }
-  .stat-val.cyan   { color: var(--left); }
-  .stat-val.yellow { color: var(--right); }
-  .stat-val.green  { color: var(--placed); }
-
-  /* Array cells */
-  .array-section { padding: 14px 28px 18px; }
-  .arr-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; margin-bottom: 8px; }
-  .array-display { display: flex; gap: 5px; flex-wrap: wrap; }
-
-  .arr-cell {
-    font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700;
-    width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;
-    border: 2px solid var(--border); border-radius: 4px;
-    background: var(--card); transition: all .2s;
-  }
-
-  .arr-cell.pivot   { border-color: var(--pivot);  color: var(--pivot);  background: #ff386418; }
-  .arr-cell.left-z  { border-color: var(--left);   color: var(--left);   background: #00f5d418; }
-  .arr-cell.right-z { border-color: var(--right);  color: var(--right);  background: #fee44018; }
-  .arr-cell.swapping{ border-color: var(--swap);   color: var(--swap);   background: #f77f0018; }
-  .arr-cell.placed  { border-color: var(--placed); color: var(--placed); background: #38b00018; }
-  .arr-cell.active-range { border-color: #2a3050; }
-
-  /* Legend */
-  .legend {
-    display: flex; gap: 18px; flex-wrap: wrap;
-    padding: 10px 28px 18px;
-    font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted);
-  }
-
-  .legend-item { display: flex; align-items: center; gap: 6px; }
-  .legend-dot { width: 9px; height: 9px; border-radius: 2px; }
-
-  /* Step explain */
-  .step-explain {
-    padding: 18px 28px; font-size: .88rem; line-height: 1.75;
-    color: var(--muted); min-height: 68px; border-top: 1px solid var(--border);
-  }
-
-  .step-explain strong { color: var(--text); }
-  .step-explain .hlp  { color: var(--pivot);  font-weight: 700; }
-  .step-explain .hll  { color: var(--left);   font-weight: 700; }
-  .step-explain .hlr  { color: var(--right);  font-weight: 700; }
-  .step-explain .hls  { color: var(--placed); font-weight: 700; }
-  .step-explain .hlw  { color: var(--swap);   font-weight: 700; }
-
-  /* Pseudocode */
-  .pseudo-section {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 8px; overflow: hidden; margin-bottom: 44px;
-  }
-
-  .pseudo-header {
-    padding: 13px 22px; border-bottom: 1px solid var(--border);
-    font-family: 'JetBrains Mono', monospace; font-size: 11px;
-    color: var(--muted); display: flex; gap: 8px; align-items: center;
-  }
-
-  .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .dot.r { background: #ff5f57; }
-  .dot.y { background: #ffbd2e; }
-  .dot.g { background: #28c840; }
-
-  pre {
-    padding: 22px;
-    font-family: 'JetBrains Mono', monospace; font-size: 12px;
-    line-height: 2; overflow-x: auto; tab-size: 2;
-  }
-
-  .kw  { color: var(--pivot); }
-  .fn  { color: var(--left); }
-  .cm  { color: #252b3f; font-style: italic; }
-  .num { color: var(--placed); }
-  .op  { color: var(--right); }
-  .var { color: #c8d0e0; }
-
-  /* Complexity */
-  .complexity-row {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 14px; margin-bottom: 44px;
-  }
-
-  .comp-card {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 6px; padding: 20px 22px; text-align: center;
-  }
-
-  .comp-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
-  .comp-val { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 1px; margin-bottom: 8px; }
-  .comp-desc { font-size: .76rem; color: var(--muted); font-family: 'JetBrains Mono', monospace; line-height: 1.55; }
-
-  /* VS table */
-  .vs-section { background: var(--card); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 44px; }
-  .vs-header { padding: 15px 22px; border-bottom: 1px solid var(--border); font-weight: 700; font-size: .95rem; }
-  .vs-header span { color: var(--pivot); }
-
-  .vs-table { width: 100%; border-collapse: collapse; font-family: 'JetBrains Mono', monospace; font-size: 11px; }
-  .vs-table th { padding: 10px 16px; text-align: left; color: var(--muted); font-size: 9px; letter-spacing: 1px; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-  .vs-table td { padding: 9px 16px; border-bottom: 1px solid #090b12; }
-  .vs-table tr:last-child td { border-bottom: none; }
-  .vs-table td:first-child { color: var(--muted); }
-  .vs-table td:nth-child(2) { color: var(--pivot); }
-  .vs-table td:nth-child(3) { color: #c77dff88; }
-  .vs-table td:nth-child(4) { color: #ef476f66; }
-  .vs-table td:nth-child(5) { color: #ffd16666; }
-
-  ::-webkit-scrollbar { width: 4px; height: 4px; }
-  ::-webkit-scrollbar-track { background: var(--card); }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  @media (max-width: 600px) {
-    .step-cards { grid-template-columns: 1fr 1fr; }
-    .step-item { border-bottom: 1px solid var(--border); }
-    .stats-row { flex-wrap: wrap; }
-    .stat-box { min-width: 50%; }
-    .viz-wrap { flex-direction: column; }
-  }
+:root {
+  --bg:      #04050c;
+  --surface: #080a14;
+  --card:    #0c0e1c;
+  --card2:   #111328;
+  --border:  #181d30;
+  --border2: #222840;
+  --pivot:   #ff3864;
+  --left:    #00f5d4;
+  --right:   #fee440;
+  --placed:  #38b000;
+  --swap:    #f77f00;
+  --text:    #e8ecf4;
+  --muted:   #5a6278;
+  --muted2:  #303550;
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:'Syne',sans-serif;line-height:1.6;overflow-x:hidden;}
+body::before{
+  content:'';position:fixed;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 700px 500px at 5%  5%,  #ff386410 0%,transparent 60%),
+    radial-gradient(ellipse 600px 500px at 95% 95%, #00f5d410 0%,transparent 60%),
+    linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:auto,auto,48px 48px,48px 48px;
+  opacity:.5;pointer-events:none;
+}
+
+.page{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:0 24px 120px;}
+
+/* ── Nav ── */
+nav{position:sticky;top:0;z-index:100;background:rgba(4,5,12,.88);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;}
+.nav-inner{max-width:1120px;margin:0 auto;display:flex;align-items:center;height:54px;overflow-x:auto;}
+.nav-inner::-webkit-scrollbar{display:none;}
+.nav-logo{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--pivot);white-space:nowrap;margin-right:24px;flex-shrink:0;}
+.nav-link{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.5px;color:var(--muted);text-decoration:none;padding:0 14px;height:54px;display:flex;align-items:center;border-bottom:2px solid transparent;transition:color .2s,border-color .2s;white-space:nowrap;flex-shrink:0;}
+.nav-link:hover{color:var(--text);border-bottom-color:var(--border2);}
+.nav-link.active{color:var(--pivot);border-bottom-color:var(--pivot);}
+
+/* ── Hero ── */
+#hero{padding:90px 0 70px;display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;}
+@media(max-width:750px){#hero{grid-template-columns:1fr;gap:40px;padding:60px 0 40px;}}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--pivot);border:1px solid #ff386440;background:#ff386408;padding:5px 14px;border-radius:2px;letter-spacing:2px;text-transform:uppercase;margin-bottom:24px;}
+.hero-tag::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--pivot);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+h1.hero-title{font-size:clamp(3rem,7vw,5.5rem);font-weight:800;line-height:.95;letter-spacing:-3px;margin-bottom:20px;}
+h1.hero-title .red{color:var(--pivot);}
+h1.hero-title .dim{color:var(--muted2);}
+.hero-desc{color:var(--muted);font-size:1rem;line-height:1.7;max-width:420px;margin-bottom:32px;}
+.hero-meta{display:flex;gap:24px;flex-wrap:wrap;}
+.meta-item{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);}
+.meta-item strong{color:var(--text);display:block;font-size:13px;}
+.complexity-box{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px;}
+.complexity-box h3{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:20px;}
+.big-O{font-family:'Space Mono',monospace;font-size:3rem;font-weight:700;color:var(--placed);line-height:1;margin-bottom:6px;}
+.big-O-note{font-size:.8rem;color:var(--muted);margin-bottom:20px;}
+.cplx-row{display:flex;justify-content:space-between;padding:8px 0;border-top:1px solid var(--border);font-family:'Space Mono',monospace;font-size:12px;}
+.cplx-row span:first-child{color:var(--muted);}
+.cplx-row span:last-child{font-weight:700;}
+
+/* ── Sections ── */
+.section{padding:70px 0 0;}
+.section-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--pivot);margin-bottom:10px;}
+.section-title{font-size:clamp(1.8rem,4vw,2.8rem);font-weight:800;letter-spacing:-1.5px;margin-bottom:10px;}
+.section-title .dim{color:var(--muted2);}
+.section-sub{color:var(--muted);font-size:.95rem;max-width:600px;margin-bottom:36px;}
+
+/* ── Cards ── */
+.cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:16px;}
+.card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:28px 24px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s;}
+.card:hover{border-color:var(--border2);transform:translateY(-3px);}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.card.rd::after{background:linear-gradient(90deg,var(--pivot),#c02040);}
+.card.cy::after{background:linear-gradient(90deg,var(--left),#00c0a0);}
+.card.ye::after{background:linear-gradient(90deg,var(--right),#d4b800);}
+.card.gr::after{background:linear-gradient(90deg,var(--placed),#208000);}
+.card.or::after{background:linear-gradient(90deg,var(--swap),#c06000);}
+.card-icon{font-size:2rem;margin-bottom:14px;}
+.card h3{font-size:1rem;font-weight:700;margin-bottom:10px;}
+.card p{font-size:.84rem;color:var(--muted);line-height:1.65;font-family:'Space Mono',monospace;}
+.card p strong{color:var(--text);}
+.card-tag{display:inline-block;margin-top:14px;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted2);letter-spacing:1px;background:var(--card2);border:1px solid var(--border);padding:3px 10px;border-radius:3px;}
+
+/* Analogy */
+.analogy-box{background:var(--card);border:1px solid var(--border);border-left:3px solid var(--pivot);border-radius:8px;padding:20px 24px;font-size:.9rem;line-height:1.75;color:var(--muted);}
+.analogy-box strong{color:var(--text);}
+.analogy-box .hl{color:var(--pivot);font-weight:700;}
+
+/* ── Algo steps ── */
+.algo-steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.algo-step{padding:28px 24px;border-right:1px solid var(--border);}
+.algo-step:last-child{border-right:none;}
+@media(max-width:700px){.algo-steps{grid-template-columns:1fr 1fr;}.algo-step:nth-child(2){border-right:none;}.algo-step:nth-child(1),.algo-step:nth-child(2){border-bottom:1px solid var(--border);}}
+.step-n{font-family:'Space Mono',monospace;font-size:2.8rem;font-weight:700;color:var(--border2);line-height:1;margin-bottom:12px;}
+.algo-step h4{font-size:.95rem;font-weight:700;color:var(--pivot);margin-bottom:8px;}
+.algo-step p{font-size:.82rem;color:var(--muted);line-height:1.65;font-family:'Space Mono',monospace;}
+.algo-step p code{color:var(--left);background:var(--card2);padding:1px 5px;border-radius:3px;font-size:.78rem;}
+
+/* ── Viz wrapper ── */
+.viz-wrapper{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.viz-header{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+.viz-header-title{font-size:1rem;font-weight:700;letter-spacing:-.3px;}
+.viz-header-title span{color:var(--pivot);}
+.viz-controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+button{font-family:'Space Mono',monospace;font-size:11px;padding:8px 18px;border-radius:5px;border:1px solid;cursor:pointer;transition:all .15s;letter-spacing:.5px;}
+.btn-p{background:var(--pivot);color:#fff;border-color:var(--pivot);font-weight:700;}
+.btn-p:hover{background:#d92d54;}
+.btn-p:disabled{opacity:.35;cursor:default;}
+.btn-s{background:transparent;color:var(--text);border-color:var(--border2);}
+.btn-s:hover{border-color:#2e3550;background:var(--card);}
+.speed-wrap{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);}
+input[type=range]{-webkit-appearance:none;width:80px;height:3px;background:var(--border);border-radius:2px;outline:none;border:none;padding:0;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--pivot);cursor:pointer;}
+
+/* ── Flow body ── */
+.flow-body{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--border);}
+@media(max-width:820px){.flow-body{grid-template-columns:1fr;}}
+.flow-col{padding:24px 28px;border-right:1px solid var(--border);}
+.flow-col:last-child{border-right:none;}
+.flow-col-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:16px;}
+
+/* Pseudocode interactive */
+.pseudo-block{font-family:'Space Mono',monospace;}
+.code-line{display:flex;align-items:flex-start;gap:10px;border-radius:5px;padding:3px 8px;transition:background .3s;cursor:default;position:relative;line-height:2.1;}
+.code-line:hover{background:var(--card2);}
+.code-line.active{background:#ff386418;box-shadow:inset 2px 0 0 var(--pivot);}
+.code-line.active::before{content:'▶';position:absolute;left:-16px;color:var(--pivot);font-size:9px;top:8px;}
+.ln{color:var(--muted2);min-width:20px;text-align:right;font-size:10px;padding-top:4px;user-select:none;flex-shrink:0;}
+.kw {color:var(--pivot);}
+.fn {color:var(--left);}
+.cm {color:var(--muted2);font-style:italic;}
+.vr {color:var(--right);}
+.nm {color:var(--placed);}
+.indent1{padding-left:20px;}
+.indent2{padding-left:40px;}
+.indent3{padding-left:60px;}
+
+/* State panels */
+.state-panel{margin-bottom:16px;}
+.state-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted2);margin-bottom:6px;}
+.state-box{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:'Space Mono',monospace;font-size:12px;}
+
+/* Mini bars */
+.mini-bars{display:flex;align-items:flex-end;gap:4px;height:80px;margin-bottom:4px;}
+.mb-col{display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;}
+.mb-val{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted2);}
+.mb-bar{width:100%;border-radius:3px 3px 0 0;transition:height .25s cubic-bezier(.4,0,.2,1),background .2s;}
+.mb-idx{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted2);}
+
+/* Cells */
+.cells-row{display:flex;gap:5px;flex-wrap:wrap;margin-top:20px;}
+.ac{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);border-radius:5px;background:var(--card2);transition:all .25s;position:relative;}
+.ac.piv   {border-color:var(--pivot); background:#ff386415;color:var(--pivot);}
+.ac.lft   {border-color:var(--left);  background:#00f5d415;color:var(--left);}
+.ac.rgt   {border-color:var(--right); background:#fee44015;color:var(--right);}
+.ac.swp   {border-color:var(--swap);  background:#f77f0015;color:var(--swap);}
+.ac.plc   {border-color:var(--placed);background:#38b00015;color:var(--placed);}
+.ac.rng   {border-color:var(--border2);}
+.ac-idx{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:9px;color:var(--muted2);}
+
+/* Var pills */
+.var-row{display:flex;gap:10px;flex-wrap:wrap;}
+.var-pill{font-family:'Space Mono',monospace;font-size:12px;background:var(--card2);border:1px solid var(--border);border-radius:5px;padding:5px 12px;transition:background .3s,border-color .3s,color .3s;}
+.var-pill.active {border-color:var(--pivot);background:#ff386414;color:var(--pivot);}
+.var-pill.changed{border-color:var(--placed);background:#38b00014;color:var(--placed);animation:flashPill .5s ease;}
+.var-pill b{color:var(--muted);font-weight:400;}
+@keyframes flashPill{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* Call stack panel */
+.call-stack-panel{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.cs-header{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);}
+.cs-list{padding:10px 14px;display:flex;flex-direction:column-reverse;gap:6px;min-height:80px;}
+.cs-frame{font-family:'Space Mono',monospace;font-size:11px;padding:5px 10px;border-radius:4px;border:1px solid var(--border);background:var(--surface);transition:all .2s;color:var(--muted);}
+.cs-frame.active{border-color:var(--pivot);color:var(--pivot);background:#ff386412;}
+.cs-empty{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);padding:4px 0;}
+
+/* Explain bar */
+.explain-bar{padding:16px 28px;border-top:1px solid var(--border);font-size:.88rem;color:var(--muted);min-height:60px;line-height:1.7;background:var(--card);}
+.explain-bar b   {color:var(--text);}
+.explain-bar .hlp{color:var(--pivot); font-weight:600;}
+.explain-bar .hll{color:var(--left);  font-weight:600;}
+.explain-bar .hlr{color:var(--right); font-weight:600;}
+.explain-bar .hls{color:var(--placed);font-weight:600;}
+.explain-bar .hlw{color:var(--swap);  font-weight:600;}
+
+/* Legend */
+.legend{display:flex;gap:20px;flex-wrap:wrap;padding:14px 28px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);border-top:1px solid var(--border);}
+.leg-item{display:flex;align-items:center;gap:7px;}
+.leg-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0;}
+
+/* ── Classic viz ── */
+.classic-body{padding:28px;}
+.viz-two-col{display:flex;gap:22px;flex-wrap:wrap;margin-bottom:20px;}
+.bars-side{flex:2;min-width:260px;}
+.bars-side-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+.bars-area-big{min-height:190px;display:flex;align-items:flex-end;gap:5px;}
+.bar-col2{display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;}
+.bar-val2{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);transition:color .2s;}
+.bar2{width:100%;border-radius:3px 3px 0 0;transition:height .22s cubic-bezier(.4,0,.2,1),background .2s;}
+.bar-idx2{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted2);}
+.markers-row{display:flex;gap:5px;min-height:16px;margin-top:5px;}
+.marker-cell{flex:1;text-align:center;font-family:'Space Mono',monospace;font-size:9px;transition:color .2s;}
+
+.stack-side{flex:1;min-width:180px;}
+.stack-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:10px;}
+.stack-box-c{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;min-height:200px;}
+.stack-box-c h4{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--border);}
+.stack-list-c{padding:10px 14px;display:flex;flex-direction:column-reverse;gap:6px;}
+
+/* Stats */
+.stats-row{display:flex;gap:0;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:20px;}
+.stat-box{flex:1;padding:14px 18px;border-right:1px solid var(--border);font-family:'Space Mono',monospace;}
+.stat-box:last-child{border-right:none;}
+.stat-label{font-size:10px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-bottom:4px;}
+.stat-val{font-size:1.4rem;font-weight:700;color:var(--pivot);}
+.stat-val.cyan  {color:var(--left);}
+.stat-val.yellow{color:var(--right);}
+.stat-val.green {color:var(--placed);}
+
+/* Array cells classic */
+.arr-disp{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:16px;}
+.arr-cell{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;width:36px;height:36px;display:flex;align-items:center;justify-content:center;border:2px solid var(--border);border-radius:5px;background:var(--card2);transition:all .2s;}
+.arr-cell.piv{border-color:var(--pivot); color:var(--pivot); background:#ff386418;}
+.arr-cell.lft{border-color:var(--left);  color:var(--left);  background:#00f5d418;}
+.arr-cell.rgt{border-color:var(--right); color:var(--right); background:#fee44018;}
+.arr-cell.swp{border-color:var(--swap);  color:var(--swap);  background:#f77f0018;}
+.arr-cell.plc{border-color:var(--placed);color:var(--placed);background:#38b00018;}
+
+/* Log */
+.log-wrap{background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;}
+.log-wrap h4{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:11px 16px;border-bottom:1px solid var(--border);}
+.log-body{padding:12px 16px;font-family:'Space Mono',monospace;font-size:11px;line-height:1.85;max-height:150px;overflow-y:auto;color:var(--muted);}
+.log-body::-webkit-scrollbar{width:3px;}
+.log-body::-webkit-scrollbar-thumb{background:var(--border);}
+.ls{color:var(--text);}
+
+.step-expl-wrap{padding:0 28px 20px;}
+.step-expl-inner{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px 20px;font-size:.88rem;line-height:1.7;color:var(--muted);min-height:60px;}
+.step-expl-inner strong{color:var(--text);}
+.step-expl-inner .hlp{color:var(--pivot); font-weight:700;}
+.step-expl-inner .hll{color:var(--left);  font-weight:700;}
+.step-expl-inner .hlr{color:var(--right); font-weight:700;}
+.step-expl-inner .hls{color:var(--placed);font-weight:700;}
+.step-expl-inner .hlw{color:var(--swap);  font-weight:700;}
+
+/* ── Pseudocode static ── */
+.pseudo-section{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.pseudo-header{padding:14px 22px;border-bottom:1px solid var(--border);font-family:'Space Mono',monospace;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center;}
+.dot{width:10px;height:10px;border-radius:50%;}.dot.r{background:#ff5f57}.dot.y{background:#ffbd2e}.dot.g{background:#28c840}
+pre{padding:24px 28px;font-family:'Space Mono',monospace;font-size:12px;line-height:2.1;overflow-x:auto;tab-size:2;}
+pre::-webkit-scrollbar{height:4px;}
+pre::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* ── Complexity ── */
+.comp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;}
+.comp-card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:24px;text-align:center;}
+.comp-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.comp-val{font-family:'Space Mono',monospace;font-size:1.9rem;font-weight:700;margin-bottom:10px;}
+.comp-desc{font-size:.78rem;color:var(--muted);font-family:'Space Mono',monospace;line-height:1.55;}
+
+/* ── Table ── */
+.vs-wrap{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:12px;}
+th{background:var(--card2);padding:12px 18px;text-align:left;color:var(--text);font-size:11px;border-bottom:1px solid var(--border);}
+td{padding:10px 18px;color:var(--muted);border-bottom:1px solid var(--border2);}
+td:first-child{color:var(--text);font-weight:700;}
+tr:last-child td{border-bottom:none;}
+.tg{color:var(--placed);font-weight:700;}
+.tw{color:var(--right);font-weight:700;}
+.tb{color:var(--pivot);font-weight:700;}
+
+/* ── Footer ── */
+footer{border-top:1px solid var(--border);padding:40px 24px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted2);}
+footer a{color:var(--muted);text-decoration:none;}
+footer a:hover{color:var(--pivot);}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--surface);}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px;}
 </style>
 </head>
 <body>
-<div class="container">
 
-  <header>
-    <div class="badge">Algoritmos de Ordenación</div>
-    <h1>QUICK<br><span class="accent">SORT.</span></h1>
-    <p class="subtitle">El algoritmo más usado en la práctica. Elige un pivote, parte el array en dos zonas y ordena cada zona recursivamente.</p>
-  </header>
-
-  <div class="analogy-box">
-    🎯 <strong>Piénsalo como organizar una fila de personas por altura:</strong> eliges a una persona como <span class="hl">pivote</span>. Los más bajos se van a su izquierda, los más altos a su derecha. Luego repites lo mismo en cada grupo. Al final todos están en su sitio sin haber movido a nadie más de lo necesario.
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <span class="nav-logo">QUICKSORT.algo</span>
+    <a href="#concepto"     class="nav-link">Concepto</a>
+    <a href="#pasos"        class="nav-link">Pasos</a>
+    <a href="#flujo-datos"  class="nav-link">Flujo de datos</a>
+    <a href="#visualizador" class="nav-link">Visualizador</a>
+    <a href="#pseudocodigo" class="nav-link">Pseudocódigo</a>
+    <a href="#complejidad"  class="nav-link">Complejidad</a>
+    <a href="#comparacion"  class="nav-link">Comparación</a>
   </div>
+</nav>
 
-  <div class="concept-row">
-    <div class="concept-card red">
-      <div class="concept-icon">🎯</div>
-      <h3>El pivote</h3>
-      <p>Un elemento elegido que queda en su <strong>posición definitiva</strong> tras la partición. Todo lo menor queda a su izquierda, todo lo mayor a su derecha.</p>
-    </div>
-    <div class="concept-card cyan">
-      <div class="concept-icon">↔️</div>
-      <h3>La partición</h3>
-      <p>El núcleo del algoritmo. Recorre el array con dos punteros (i, j) e <strong>intercambia elementos</strong> hasta colocar el pivote en su sitio.</p>
-    </div>
-    <div class="concept-card yellow">
-      <div class="concept-icon">🌳</div>
-      <h3>Recursión</h3>
-      <p>Aplica quickSort a la <strong>subarray izquierda</strong> (menores) y a la <strong>subarray derecha</strong> (mayores) hasta que cada trozo tiene 1 elemento.</p>
-    </div>
-    <div class="concept-card green">
-      <div class="concept-icon">🚀</div>
-      <h3>O(1) espacio extra</h3>
-      <p>A diferencia de Merge Sort, <strong>ordena en sitio</strong>. No necesita array auxiliar. Por eso domina en la práctica (C, Java, Python lo usan).</p>
+<div class="page">
+
+<!-- HERO -->
+<section id="hero">
+  <div>
+    <div class="hero-tag">Algoritmos · Ordenación</div>
+    <h1 class="hero-title">Quick<span class="red">Sort</span></h1>
+    <p class="hero-desc">
+      El algoritmo de ordenación más usado en producción. Elige un pivote, divide el array en dos zonas y ordena cada zona recursivamente. O(n log n) en la práctica, O(1) espacio extra.
+    </p>
+    <div class="hero-meta">
+      <div class="meta-item"><strong>Divide y vencerás</strong>Paradigma</div>
+      <div class="meta-item"><strong>O(n log n)</strong>Caso medio</div>
+      <div class="meta-item"><strong>O(log n)</strong>Espacio</div>
+      <div class="meta-item"><strong>No estable</strong>Propiedad</div>
     </div>
   </div>
+  <div class="complexity-box">
+    <h3>Resumen de complejidad</h3>
+    <div class="big-O">O(n log n)</div>
+    <div class="big-O-note">caso medio — el más rápido en práctica</div>
+    <div class="cplx-row"><span>Mejor caso</span><span style="color:var(--placed)">O(n log n)</span></div>
+    <div class="cplx-row"><span>Caso medio</span><span style="color:var(--placed)">O(n log n)</span></div>
+    <div class="cplx-row"><span>Peor caso</span><span style="color:var(--pivot)">O(n²)</span></div>
+    <div class="cplx-row"><span>Espacio (pila)</span><span style="color:var(--left)">O(log n)</span></div>
+    <div class="cplx-row"><span>¿Estable?</span><span style="color:var(--pivot)">No</span></div>
+    <div class="cplx-row"><span>¿In-place?</span><span style="color:var(--placed)">Sí</span></div>
+  </div>
+</section>
 
-  <div class="steps-section">
-    <h2>¿Cómo <span>funciona</span>?</h2>
-    <div class="step-cards">
-      <div class="step-item">
-        <div class="step-num">01</div>
-        <h4>Elegir pivote</h4>
-        <p>Elige un pivote (ej: el último elemento). Su objetivo: llegar a su posición final correcta en el array ordenado.</p>
-      </div>
-      <div class="step-item">
-        <div class="step-num">02</div>
-        <h4>Particionar</h4>
-        <p>Recorre con puntero i. Si arr[j] ≤ pivote, incrementa i e intercambia arr[i] con arr[j]. El pivote separa menores de mayores.</p>
-      </div>
-      <div class="step-item">
-        <div class="step-num">03</div>
-        <h4>Colocar pivote</h4>
-        <p>Al terminar, coloca el pivote en arr[i+1]. Ese índice es su posición DEFINITIVA. Ya nunca se moverá.</p>
-      </div>
-      <div class="step-item">
-        <div class="step-num">04</div>
-        <h4>Recursión</h4>
-        <p>Llama a quickSort en [lo..pivotIdx-1] y [pivotIdx+1..hi]. Cada llamada coloca otro pivote en su sitio.</p>
-      </div>
-    </div>
+<!-- CONCEPTO -->
+<section id="concepto" class="section">
+  <div class="section-tag">01 · Fundamentos</div>
+  <h2 class="section-title">¿Qué es y <span class="dim">por qué domina?</span></h2>
+  <p class="section-sub">Cinco ideas que explican por qué Quick Sort es el algoritmo de ordenación más usado en producción.</p>
+
+  <div class="analogy-box" style="margin-bottom:28px">
+    🎯 <strong>Piénsalo como organizar una fila de personas por altura:</strong> eliges a una persona como <span class="hl">pivote</span>. Los más bajos se van a su izquierda, los más altos a su derecha. Luego repites lo mismo en cada grupo. Al final todos están en su sitio sin haber creado ninguna copia de la fila.
   </div>
 
-  <!-- Demo -->
-  <div class="demo-section">
-    <div class="demo-header">
-      <h2>🎮 Visualización Interactiva</h2>
-      <div class="controls">
-        <div class="speed-wrap">
-          Vel.
-          <input type="range" id="speedSlider" min="100" max="1400" value="700" step="100">
+  <div class="cards-grid">
+    <div class="card rd">
+      <div class="card-icon">🎯</div>
+      <h3>El pivote: la clave</h3>
+      <p>Un elemento elegido que queda en su <strong>posición definitiva</strong> tras la partición. Todo lo menor queda a su izquierda, todo lo mayor a su derecha. Una vez colocado, nunca se mueve.</p>
+      <span class="card-tag">POSICIÓN FINAL</span>
+    </div>
+    <div class="card cy">
+      <div class="card-icon">↔️</div>
+      <h3>La partición (Lomuto)</h3>
+      <p>El núcleo del algoritmo. Usa dos punteros: <strong>i</strong> (borde de zona ≤) y <strong>j</strong> (escáner). Si arr[j] ≤ pivote, incrementa i e intercambia. Al final coloca el pivote en i+1.</p>
+      <span class="card-tag">LOMUTO PARTITION</span>
+    </div>
+    <div class="card ye">
+      <div class="card-icon">🌳</div>
+      <h3>Recursión en zonas</h3>
+      <p>Tras colocar el pivote, llama recursivamente a la <strong>zona izquierda</strong> y la <strong>zona derecha</strong>. Cada llamada coloca otro pivote en su sitio. La pila de recursión tiene solo O(log n) niveles.</p>
+      <span class="card-tag">DIVIDE & CONQUER</span>
+    </div>
+    <div class="card gr">
+      <div class="card-icon">🚀</div>
+      <h3>Más rápido en práctica</h3>
+      <p>Aunque Merge Sort también es O(n log n), Quick Sort tiene <strong>mejor localidad de caché</strong> y menos overhead de memoria. Por eso C, C++, Java y Python lo usan internamente.</p>
+      <span class="card-tag">CACHE FRIENDLY</span>
+    </div>
+    <div class="card or">
+      <div class="card-icon">⚠️</div>
+      <h3>El peor caso: O(n²)</h3>
+      <p>Si el pivote siempre es el mínimo o máximo (array ya ordenado con pivote = último), el árbol degenera en una lista. Se evita con <strong>pivote aleatorio</strong> o <strong>mediana de 3</strong>.</p>
+      <span class="card-tag">EVITAR CON RANDOM</span>
+    </div>
+  </div>
+</section>
+
+<!-- PASOS -->
+<section id="pasos" class="section">
+  <div class="section-tag">02 · Mecánica</div>
+  <h2 class="section-title">Los 4 pasos <span class="dim">del algoritmo</span></h2>
+  <p class="section-sub">Dos funciones: quickSort (recursiva) y particionar (iterativa con dos punteros).</p>
+  <div class="algo-steps">
+    <div class="algo-step">
+      <div class="step-n">01</div>
+      <h4>Elegir pivote</h4>
+      <p>Tomamos <code>arr[hi]</code> como pivote (esquema Lomuto). Inicializamos <code>i = lo - 1</code>: el borde derecho de la zona ≤ pivote, inicialmente vacía.</p>
+    </div>
+    <div class="algo-step">
+      <div class="step-n">02</div>
+      <h4>Escanear con j</h4>
+      <p>Para cada <code>j</code> de lo a hi-1: si <code>arr[j] ≤ pivote</code>, incrementa i e intercambia arr[i] con arr[j]. El elemento menor pasa a la zona izquierda.</p>
+    </div>
+    <div class="algo-step">
+      <div class="step-n">03</div>
+      <h4>Colocar pivote</h4>
+      <p>Al finalizar el bucle, intercambia <code>arr[i+1]</code> con <code>arr[hi]</code>. El pivote queda en <code>i+1</code> — su posición definitiva. Devuelve ese índice.</p>
+    </div>
+    <div class="algo-step">
+      <div class="step-n">04</div>
+      <h4>Recursión</h4>
+      <p>Llama <code>quickSort(lo, p-1)</code> para la zona izquierda y <code>quickSort(p+1, hi)</code> para la derecha. Caso base: <code>lo ≥ hi</code>.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FLUJO DE DATOS -->
+<section id="flujo-datos" class="section">
+  <div class="section-tag">03 · Visualización detallada</div>
+  <h2 class="section-title">Flujo de datos <span class="dim">línea a línea</span></h2>
+  <p class="section-sub">Ve qué línea se ejecuta, cómo avanzan los punteros i y j, y la pila de llamadas recursivas en tiempo real.</p>
+
+  <div class="viz-wrapper">
+    <div class="viz-header">
+      <div class="viz-header-title">🔬 Trazado <span>paso a paso</span></div>
+      <div class="viz-controls">
+        <div class="speed-wrap">vel. <input type="range" id="fSp" min="100" max="1600" value="800" step="100"></div>
+        <button class="btn-s" id="f-shuffle">🔀 Mezclar</button>
+        <button class="btn-s" id="f-reset">↺ Reset</button>
+        <button class="btn-p" id="f-step">Paso →</button>
+        <button class="btn-p" id="f-auto">▶ Auto</button>
+        <span id="f-ctr" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">paso 0</span>
+      </div>
+    </div>
+
+    <div class="flow-body">
+      <!-- LEFT: pseudocode -->
+      <div class="flow-col">
+        <div class="flow-col-title">Línea ejecutándose ahora</div>
+        <div class="pseudo-block" id="pseudoBlock">
+          <div class="code-line" data-l="fn"    ><span class="ln">1</span><span><span class="kw">función</span> <span class="fn">quickSort</span>(arr, lo, hi):</span></div>
+          <div class="code-line indent1" data-l="base"  ><span class="ln">2</span><span><span class="kw">si</span> lo <span class="nm">≥</span> hi: <span class="kw">devolver</span>  <span class="cm">// caso base</span></span></div>
+          <div class="code-line indent1" data-l="part"  ><span class="ln">3</span><span><span class="vr">p</span> = <span class="fn">particionar</span>(arr, lo, hi)</span></div>
+          <div class="code-line indent1" data-l="recL"  ><span class="ln">4</span><span><span class="fn">quickSort</span>(arr, lo, <span class="vr">p</span><span class="nm">-1</span>)</span></div>
+          <div class="code-line indent1" data-l="recR"  ><span class="ln">5</span><span><span class="fn">quickSort</span>(arr, <span class="vr">p</span><span class="nm">+1</span>, hi)</span></div>
+          <div class="code-line" data-l="pfn"   ><span class="ln">6</span><span><span class="kw">función</span> <span class="fn">particionar</span>(arr, lo, hi):</span></div>
+          <div class="code-line indent1" data-l="piv"   ><span class="ln">7</span><span><span class="vr">pivote</span> = arr[hi]</span></div>
+          <div class="code-line indent1" data-l="iinit" ><span class="ln">8</span><span><span class="vr">i</span> = lo <span class="nm">- 1</span></span></div>
+          <div class="code-line indent1" data-l="loop"  ><span class="ln">9</span><span><span class="kw">para</span> <span class="vr">j</span> <span class="kw">desde</span> lo <span class="kw">hasta</span> hi<span class="nm">-1</span>:</span></div>
+          <div class="code-line indent2" data-l="cmp"   ><span class="ln">10</span><span><span class="kw">si</span> arr[<span class="vr">j</span>] ≤ <span class="vr">pivote</span>:</span></div>
+          <div class="code-line indent3" data-l="iinc"  ><span class="ln">11</span><span><span class="vr">i</span>++</span></div>
+          <div class="code-line indent3" data-l="swap"  ><span class="ln">12</span><span>swap(arr[<span class="vr">i</span>], arr[<span class="vr">j</span>])</span></div>
+          <div class="code-line indent1" data-l="place" ><span class="ln">13</span><span>swap(arr[<span class="vr">i</span><span class="nm">+1</span>], arr[hi])  <span class="cm">// pivote a su sitio</span></span></div>
+          <div class="code-line indent1" data-l="ret"   ><span class="ln">14</span><span><span class="kw">devolver</span> <span class="vr">i</span><span class="nm">+1</span></span></div>
         </div>
-        <button class="btn-secondary" id="btnShuffle">🔀 Mezclar</button>
-        <button class="btn-secondary" id="btnReset">↺ Reset</button>
-        <button class="btn-primary" id="btnStep">Paso →</button>
-        <button class="btn-primary" id="btnAuto">▶ Auto</button>
-      </div>
-    </div>
-
-    <div class="viz-wrap">
-      <!-- Bars -->
-      <div class="bars-area">
-        <div class="panel-title">Barras — estado del array</div>
-        <div class="bars-wrap" id="barsWrap"></div>
-        <div class="markers-row" id="markersRow"></div>
       </div>
 
-      <!-- Call stack -->
-      <div class="stack-area">
-        <div class="panel-title">Pila de llamadas recursivas</div>
-        <div class="stack-box">
-          <h4>Call Stack</h4>
-          <div class="stack-list" id="stackList"></div>
+      <!-- RIGHT: state -->
+      <div class="flow-col">
+        <div class="flow-col-title">Estado de las variables</div>
+
+        <!-- Bars + cells -->
+        <div class="state-panel">
+          <div class="state-label">Array — barras en tiempo real</div>
+          <div class="mini-bars" id="fMiniB"></div>
+          <div class="cells-row" id="fCells"></div>
+        </div>
+
+        <!-- Variables -->
+        <div class="state-panel">
+          <div class="state-label">Índices de partición</div>
+          <div class="var-row">
+            <div class="var-pill" id="fvLo"><b>lo =</b> —</div>
+            <div class="var-pill" id="fvHi"><b>hi =</b> —</div>
+            <div class="var-pill" id="fvPiv"><b>pivote =</b> —</div>
+          </div>
+          <div class="var-row" style="margin-top:8px">
+            <div class="var-pill" id="fvI"><b>i =</b> —</div>
+            <div class="var-pill" id="fvJ"><b>j =</b> —</div>
+            <div class="var-pill" id="fvP"><b>p (ret) =</b> —</div>
+          </div>
+        </div>
+
+        <!-- Comparación actual -->
+        <div class="state-panel">
+          <div class="state-label">Comparación actual</div>
+          <div class="state-box" id="fCmpBox" style="font-family:'Space Mono',monospace;font-size:12px;color:var(--muted)">esperando...</div>
+        </div>
+
+        <!-- Call stack -->
+        <div class="state-panel">
+          <div class="state-label">Pila de llamadas (call stack)</div>
+          <div class="call-stack-panel">
+            <div class="cs-header">Call Stack</div>
+            <div class="cs-list" id="fStack"><div class="cs-empty">(vacía)</div></div>
+          </div>
+        </div>
+
+        <!-- Contadores -->
+        <div class="state-panel">
+          <div class="state-label">Contadores</div>
+          <div class="var-row">
+            <div class="var-pill" id="fvComp"><b>comps =</b> 0</div>
+            <div class="var-pill" id="fvSwap"><b>swaps =</b> 0</div>
+            <div class="var-pill" id="fvPivs"><b>pivotes =</b> 0</div>
+            <div class="var-pill" id="fvCalls"><b>llamadas =</b> 0</div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Stats -->
-    <div class="stats-row">
-      <div class="stat-box">
-        <div class="stat-label">Comparaciones</div>
-        <div class="stat-val" id="statComp">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Intercambios</div>
-        <div class="stat-val cyan" id="statSwap">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Pivotes colocados</div>
-        <div class="stat-val yellow" id="statPivots">0</div>
-      </div>
-      <div class="stat-box">
-        <div class="stat-label">Llamadas</div>
-        <div class="stat-val green" id="statCalls">0</div>
-      </div>
+    <div class="explain-bar" id="fExplain">
+      Pulsa <b>Paso →</b> para seguir la ejecución. La pila de llamadas muestra la recursión activa en rojo.
     </div>
 
-    <!-- Array cells -->
-    <div class="array-section">
-      <div class="arr-label">Array actual</div>
-      <div class="array-display" id="arrayDisplay"></div>
-    </div>
-
-    <!-- Legend -->
     <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--pivot)"></div> Pivote</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--left)"></div> Zona ≤ pivote</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--right)"></div> Zona > pivote</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--swap)"></div> Intercambiando</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--placed)"></div> Pivote fijo ✓</div>
-    </div>
-
-    <div class="step-explain" id="stepExplain">
-      Pulsa <strong>Paso →</strong> para ver cómo el pivote encuentra su posición definitiva, o <strong>▶ Auto</strong> para la animación completa.
+      <div class="leg-item"><div class="leg-dot" style="background:var(--pivot)"></div>Pivote</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--left)"></div>Zona ≤ pivote</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--right)"></div>Zona > pivote</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--swap)"></div>Intercambiando</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--placed)"></div>Pivote fijo ✓</div>
     </div>
   </div>
+</section>
 
-  <!-- Complexity -->
-  <div style="margin-bottom:18px;">
-    <h2 style="font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:2px; margin-bottom:18px;">
-      Complejidad <span style="color:var(--pivot)">Temporal</span>
-    </h2>
+<!-- VISUALIZADOR CLÁSICO -->
+<section id="visualizador" class="section">
+  <div class="section-tag">04 · Visualizador clásico</div>
+  <h2 class="section-title">Barras <span class="dim">y pila de recursión</span></h2>
+  <p class="section-sub">Vista completa con barras grandes, pila de llamadas, estadísticas y log de operaciones.</p>
+
+  <div class="viz-wrapper">
+    <div class="viz-header">
+      <div class="viz-header-title">🎮 Simulación interactiva</div>
+      <div class="viz-controls">
+        <div class="speed-wrap">vel. <input type="range" id="cSp" min="100" max="1400" value="700" step="100"></div>
+        <button class="btn-s" id="c-shuffle">🔀 Mezclar</button>
+        <button class="btn-s" id="c-reset">↺ Reset</button>
+        <button class="btn-p" id="c-step">Paso →</button>
+        <button class="btn-p" id="c-auto">▶ Auto</button>
+      </div>
+    </div>
+
+    <div class="classic-body">
+      <div class="viz-two-col">
+        <div class="bars-side">
+          <div class="bars-side-title">Barras — estado del array</div>
+          <div class="bars-area-big" id="cBars"></div>
+          <div class="markers-row"   id="cMarkers"></div>
+        </div>
+        <div class="stack-side">
+          <div class="stack-title">Pila de llamadas recursivas</div>
+          <div class="stack-box-c">
+            <h4>Call Stack</h4>
+            <div class="stack-list-c" id="cStack"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-box"><div class="stat-label">Comparaciones</div><div class="stat-val" id="cComp">0</div></div>
+        <div class="stat-box"><div class="stat-label">Intercambios</div><div class="stat-val cyan" id="cSwap">0</div></div>
+        <div class="stat-box"><div class="stat-label">Pivotes fijos</div><div class="stat-val yellow" id="cPivs">0</div></div>
+        <div class="stat-box"><div class="stat-label">Llamadas</div><div class="stat-val green" id="cCalls">0</div></div>
+      </div>
+
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;">Array actual</div>
+      <div class="arr-disp" id="cCells"></div>
+
+      <div class="log-wrap">
+        <h4>📋 Log de operaciones</h4>
+        <div class="log-body" id="cLog"></div>
+      </div>
+    </div>
+
+    <div class="step-expl-wrap">
+      <div class="step-expl-inner" id="cExplain">
+        Pulsa <strong>Paso →</strong> para ver cómo el pivote encuentra su posición definitiva.
+      </div>
+    </div>
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--pivot)"></div>Pivote</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--left)"></div>Zona ≤ pivote</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--right)"></div>Zona > pivote</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--swap)"></div>Intercambiando</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--placed)"></div>Pivote fijo ✓</div>
+    </div>
   </div>
-  <div class="complexity-row">
+</section>
+
+<!-- PSEUDOCÓDIGO -->
+<section id="pseudocodigo" class="section">
+  <div class="section-tag">05 · Código</div>
+  <h2 class="section-title">Pseudocódigo <span class="dim">completo</span></h2>
+  <p class="section-sub">Esquema Lomuto (pivote = último) y variante Hoare (pivote = primero, menos intercambios).</p>
+
+  <div class="pseudo-section">
+    <div class="pseudo-header">
+      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
+      &nbsp;&nbsp; quicksort.pseudo &nbsp;—&nbsp; Lomuto + variante Hoare
+    </div>
+    <pre><span style="color:var(--pivot)">función</span> <span style="color:var(--left)">quickSort</span>(arr, lo, hi):
+
+  <span style="color:var(--muted2);font-style:italic">// ── Caso base ────────────────────────────────────────────────────────</span>
+  <span style="color:var(--pivot)">si</span> lo <span style="color:var(--right)">&lt;</span> hi:
+    p = <span style="color:var(--left)">particionar</span>(arr, lo, hi)    <span style="color:var(--muted2);font-style:italic">// coloca pivote en p</span>
+    <span style="color:var(--left)">quickSort</span>(arr, lo, p <span style="color:var(--right)">- 1</span>)      <span style="color:var(--muted2);font-style:italic">// zona izquierda</span>
+    <span style="color:var(--left)">quickSort</span>(arr, p <span style="color:var(--right)">+ 1</span>, hi)      <span style="color:var(--muted2);font-style:italic">// zona derecha</span>
+
+
+<span style="color:var(--pivot)">función</span> <span style="color:var(--left)">particionar</span>(arr, lo, hi):   <span style="color:var(--muted2);font-style:italic">// esquema Lomuto</span>
+  pivote = arr[hi]                 <span style="color:var(--muted2);font-style:italic">// último elemento</span>
+  i = lo <span style="color:var(--right)">- 1</span>                     <span style="color:var(--muted2);font-style:italic">// borde zona ≤ pivote (vacía)</span>
+
+  <span style="color:var(--muted2);font-style:italic">// ── Escanear con j ───────────────────────────────────────────────────</span>
+  <span style="color:var(--pivot)">para</span> j <span style="color:var(--pivot)">desde</span> lo <span style="color:var(--pivot)">hasta</span> hi<span style="color:var(--right)">-1</span>:
+    <span style="color:var(--pivot)">si</span> arr[j] <span style="color:var(--right)">≤</span> pivote:
+      i<span style="color:var(--right)">++</span>
+      swap(arr[i], arr[j])         <span style="color:var(--muted2);font-style:italic">// lleva menor a zona ≤</span>
+
+  <span style="color:var(--muted2);font-style:italic">// ── Colocar pivote en posición definitiva ────────────────────────────</span>
+  swap(arr[i<span style="color:var(--right)">+1</span>], arr[hi])
+  <span style="color:var(--pivot)">devolver</span> i <span style="color:var(--right)">+ 1</span>
+
+
+<span style="color:var(--muted2);font-style:italic">// ── Variante Hoare (menos intercambios, pivote = primero) ────────────</span>
+<span style="color:var(--pivot)">función</span> <span style="color:var(--left)">particionHoare</span>(arr, lo, hi):
+  pivote = arr[lo]
+  i = lo <span style="color:var(--right)">- 1</span>;  j = hi <span style="color:var(--right)">+ 1</span>
+  <span style="color:var(--pivot)">mientras</span> verdadero:
+    <span style="color:var(--pivot)">hacer</span> i<span style="color:var(--right)">++</span> <span style="color:var(--pivot)">mientras</span> arr[i] <span style="color:var(--right)">&lt;</span> pivote
+    <span style="color:var(--pivot)">hacer</span> j<span style="color:var(--right)">--</span> <span style="color:var(--pivot)">mientras</span> arr[j] <span style="color:var(--right)">&gt;</span> pivote
+    <span style="color:var(--pivot)">si</span> i <span style="color:var(--right)">≥</span> j: <span style="color:var(--pivot)">devolver</span> j
+    swap(arr[i], arr[j])</pre>
+  </div>
+</section>
+
+<!-- COMPLEJIDAD -->
+<section id="complejidad" class="section">
+  <div class="section-tag">06 · Análisis</div>
+  <h2 class="section-title">Complejidad <span class="dim">temporal y espacial</span></h2>
+  <p class="section-sub">Por qué es más rápido en práctica que Merge Sort, y cuándo puede degradar a O(n²).</p>
+
+  <div class="comp-grid" style="margin-bottom:24px">
     <div class="comp-card">
       <div class="comp-label">Mejor caso</div>
       <div class="comp-val" style="color:var(--placed)">O(n log n)</div>
-      <div class="comp-desc">El pivote siempre cae en el centro. El árbol queda perfectamente balanceado con log₂(n) niveles.</div>
+      <div class="comp-desc">Pivote siempre en el centro. Árbol perfectamente balanceado con log₂(n) niveles, n comparaciones por nivel.</div>
     </div>
     <div class="comp-card">
       <div class="comp-label">Caso medio</div>
       <div class="comp-val" style="color:var(--placed)">O(n log n)</div>
-      <div class="comp-desc">En media estadística, el pivote divide razonablemente bien. Más rápido que Merge Sort en práctica (menos memoria).</div>
+      <div class="comp-desc">En media estadística, más rápido que Merge Sort. Menos accesos a memoria, mejor localidad de caché.</div>
     </div>
     <div class="comp-card">
       <div class="comp-label">Peor caso</div>
       <div class="comp-val" style="color:var(--pivot)">O(n²)</div>
-      <div class="comp-desc">Si siempre elegimos el mínimo/máximo como pivote (array ya ordenado). Se evita con pivote aleatorio o mediana de 3.</div>
+      <div class="comp-desc">Pivote = mínimo o máximo siempre. Se evita con pivote aleatorio o mediana de 3 (como en C++ std::sort).</div>
     </div>
     <div class="comp-card">
       <div class="comp-label">Espacio</div>
       <div class="comp-val" style="color:var(--left)">O(log n)</div>
-      <div class="comp-desc">Solo usa la pila de recursión. Mucho mejor que Merge Sort O(n). En el peor caso la pila llega a O(n).</div>
+      <div class="comp-desc">Solo la pila de recursión — O(log n) en el mejor caso, O(n) en el peor. Sin array auxiliar.</div>
     </div>
   </div>
 
-  <!-- VS table -->
-  <div class="vs-section">
-    <div class="vs-header">Los cinco algoritmos <span>comparados</span></div>
-    <table class="vs-table">
+  <div class="section-tag" style="margin-top:40px;margin-bottom:10px">¿Por qué es más rápido que Merge Sort en práctica?</div>
+  <div class="cards-grid">
+    <div class="card cy">
+      <div class="card-icon">💾</div>
+      <h3>Mejor localidad de caché</h3>
+      <p>Quick Sort accede al array de forma secuencial durante la partición — los datos están <strong>contiguos en memoria</strong>. Merge Sort copia datos a arrays auxiliares, generando más fallos de caché.</p>
+    </div>
+    <div class="card gr">
+      <div class="card-icon">📉</div>
+      <h3>Menos overhead de memoria</h3>
+      <p>Quick Sort es <strong>in-place</strong>: no crea copias. Merge Sort necesita O(n) memoria extra para los arrays L[] y R[]. Para arrays grandes, ese overhead importa.</p>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARACIÓN -->
+<section id="comparacion" class="section">
+  <div class="section-tag">07 · Contexto</div>
+  <h2 class="section-title">Comparación con <span class="dim">todos los algoritmos</span></h2>
+  <p class="section-sub">Quick Sort frente a los seis algoritmos de la colección.</p>
+
+  <div class="vs-wrap">
+    <table>
       <thead>
-        <tr><th>Característica</th><th>Quick Sort</th><th>Merge Sort</th><th>Burbuja</th><th>Inserción</th></tr>
+        <tr><th>Algoritmo</th><th>Mejor</th><th>Peor</th><th>Espacio</th><th>Estable</th><th>In-place</th><th>Nota</th></tr>
       </thead>
       <tbody>
-        <tr><td>Mejor caso</td><td>O(n log n)</td><td>O(n log n)</td><td>O(n) ✅</td><td>O(n) ✅</td></tr>
-        <tr><td>Peor caso</td><td>O(n²) ⚠️</td><td>O(n log n) ✅</td><td>O(n²)</td><td>O(n²)</td></tr>
-        <tr><td>Espacio extra</td><td>O(log n) ✅</td><td>O(n)</td><td>O(1) ✅</td><td>O(1) ✅</td></tr>
-        <tr><td>Estable</td><td>No ❌</td><td>Sí ✅</td><td>Sí ✅</td><td>Sí ✅</td></tr>
-        <tr><td>En práctica</td><td>El más rápido ✅✅</td><td>Muy rápido</td><td>Lento</td><td>Bueno (n pequeño)</td></tr>
-        <tr><td>Usado en</td><td>C, C++, Java stdlib</td><td>Python, Java (estable)</td><td>Educación</td><td>Timsort (pequeños)</td></tr>
+        <tr>
+          <td>Quick Sort</td>
+          <td><span class="tg">O(n log n)</span></td>
+          <td><span class="tb">O(n²)</span></td>
+          <td><span class="tg">O(log n)</span></td>
+          <td><span class="tb">No</span></td>
+          <td><span class="tg">Sí</span></td>
+          <td>El más rápido en práctica</td>
+        </tr>
+        <tr>
+          <td>Merge Sort</td>
+          <td><span class="tg">O(n log n)</span></td>
+          <td><span class="tg">O(n log n)</span></td>
+          <td><span class="tw">O(n)</span></td>
+          <td><span class="tg">Sí</span></td>
+          <td><span class="tb">No</span></td>
+          <td>Garantizado, estable</td>
+        </tr>
+        <tr>
+          <td>Inserción</td>
+          <td><span class="tg">O(n)</span></td>
+          <td><span class="tw">O(n²)</span></td>
+          <td><span class="tg">O(1)</span></td>
+          <td><span class="tg">Sí</span></td>
+          <td><span class="tg">Sí</span></td>
+          <td>Mejor para casi-ordenados</td>
+        </tr>
+        <tr>
+          <td>Burbuja</td>
+          <td><span class="tg">O(n)</span></td>
+          <td><span class="tw">O(n²)</span></td>
+          <td><span class="tg">O(1)</span></td>
+          <td><span class="tg">Sí</span></td>
+          <td><span class="tg">Sí</span></td>
+          <td>Educativo</td>
+        </tr>
+        <tr>
+          <td>Selección</td>
+          <td><span class="tw">O(n²)</span></td>
+          <td><span class="tw">O(n²)</span></td>
+          <td><span class="tg">O(1)</span></td>
+          <td><span class="tb">No</span></td>
+          <td><span class="tg">Sí</span></td>
+          <td>Mínimos intercambios</td>
+        </tr>
+        <tr>
+          <td>Dijkstra</td>
+          <td colspan="5" style="color:var(--muted2);font-style:italic">Caminos mínimos en grafos — no es algoritmo de ordenación</td>
+          <td></td>
+        </tr>
       </tbody>
     </table>
   </div>
-
-  <!-- Pseudocode -->
-  <div class="pseudo-section">
-    <div class="pseudo-header">
-      <div class="dot r"></div><div class="dot y"></div><div class="dot g"></div>
-      &nbsp;&nbsp; quicksort.pseudo
-    </div>
-    <pre><span class="kw">función</span> <span class="fn">quickSort</span>(arr, lo, hi):
-  <span class="kw">si</span> lo <span class="op">&lt;</span> hi:
-    <span class="var">p</span> = <span class="fn">particionar</span>(arr, lo, hi)
-    <span class="fn">quickSort</span>(arr, lo, <span class="var">p</span> <span class="op">- 1</span>)   <span class="cm">// recursión izquierda</span>
-    <span class="fn">quickSort</span>(arr, <span class="var">p</span> <span class="op">+ 1</span>, hi)   <span class="cm">// recursión derecha</span>
-
-
-<span class="kw">función</span> <span class="fn">particionar</span>(arr, lo, hi):
-  <span class="var">pivote</span> = arr[hi]              <span class="cm">// último elemento como pivote</span>
-  <span class="var">i</span> = lo <span class="op">- 1</span>                  <span class="cm">// índice de la zona ≤ pivote</span>
-
-  <span class="kw">para</span> <span class="var">j</span> <span class="kw">desde</span> lo <span class="kw">hasta</span> hi<span class="op">-1</span>:
-    <span class="kw">si</span> arr[<span class="var">j</span>] <span class="op">&lt;=</span> <span class="var">pivote</span>:
-      <span class="var">i</span><span class="op">++</span>
-      intercambiar(arr[<span class="var">i</span>], arr[<span class="var">j</span>])  <span class="cm">// lleva el menor a zona izq.</span>
-
-  <span class="cm">// coloca el pivote en su sitio definitivo</span>
-  intercambiar(arr[<span class="var">i</span><span class="op">+1</span>], arr[hi])
-  <span class="kw">devolver</span> <span class="var">i</span> <span class="op">+ 1</span>               <span class="cm">// índice final del pivote</span></pre>
-  </div>
+</section>
 
 </div>
 
+<footer>
+  <div style="max-width:1120px;margin:0 auto">
+    <p style="margin-bottom:8px">
+      Guía de referencia — Quick Sort &nbsp;·&nbsp;
+      <a href="https://es.wikipedia.org/wiki/Quicksort" target="_blank">Wikipedia</a>
+    </p>
+    <p>UNIR — Grado en Ciberseguridad &nbsp;·&nbsp; Algoritmos y Estructuras de Datos</p>
+  </div>
+</footer>
+
+<!-- ═══ JAVASCRIPT ═══ -->
 <script>
-// ─── Data ─────────────────────────────────────────────────────────────────────
-const DEFAULT_ARR = [10, 80, 30, 90, 40, 50, 70];
-let arr = [...DEFAULT_ARR];
+'use strict';
+const DEFAULT_ARR=[10,80,30,90,40,50,70];
+const POOL=[10,20,30,40,50,60,70,80,90,15,35,55];
+function shuffle(s){return[...s].sort(()=>Math.random()-.5).slice(0,7);}
 
-// ─── Pre-compute all steps ────────────────────────────────────────────────────
-function buildSteps(inputArr) {
-  const steps = [];
-  const a = [...inputArr];
-  let comparisons = 0, swaps = 0, pivotsPlaced = 0, calls = 0;
-  const placedIdxs = new Set();
-  const callStack = [];  // [{lo, hi}]
+// ── Build steps ────────────────────────────────────────────────────────────
+function buildSteps(input){
+  const steps=[], a=[...input];
+  let comps=0,swaps=0,pivots=0,calls=0;
+  const placed=new Set(), callStack=[];
 
-  function addStep(type, pivotIdx, lo, hi, iPtr, jPtr, swapPair, msg) {
+  function addStep(lines,pivIdx,lo,hi,iPtr,jPtr,swapPair,pivVal,msg){
     steps.push({
-      type,
-      arr: [...a],
-      pivotIdx,
-      lo, hi,
-      iPtr, jPtr,
-      swapPair: swapPair ? [...swapPair] : [],
-      msg,
-      comparisons,
-      swaps,
-      pivotsPlaced,
-      calls,
-      placed: new Set(placedIdxs),
-      stack: callStack.map(f => ({ ...f }))
+      lines,arr:[...a],pivIdx,lo,hi,iPtr,jPtr,
+      swapPair:swapPair?[...swapPair]:[],pivVal,msg,
+      comps,swaps,pivots,calls,
+      placed:new Set(placed),
+      stack:callStack.map(f=>({...f}))
     });
   }
 
-  function partition(lo, hi) {
-    const pivotVal = a[hi];
-    let i = lo - 1;
+  function partition(lo,hi){
+    const pivVal=a[hi];
+    let i=lo-1;
 
-    addStep('pivot_chosen', hi, lo, hi, i, lo,  [], 
-      `<span class="hlp">Pivote = ${pivotVal}</span> (posición ${hi}). Iniciamos partición en [${lo}..${hi}]. Puntero i = ${i} (zona ≤ pivote vacía).`);
+    addStep(['pfn','piv','iinit'],hi,lo,hi,i,lo,[],pivVal,
+      `<b>Líneas 7–8:</b> <span class="hlp">pivote = arr[${hi}] = ${pivVal}</span>. i = ${i}. Zona ≤ pivote inicialmente vacía.`);
 
-    for (let j = lo; j < hi; j++) {
-      comparisons++;
-      const cmp = a[j] <= pivotVal;
+    for(let j=lo;j<hi;j++){
+      comps++;
+      const cmp=a[j]<=pivVal;
+      addStep(['loop','cmp'],hi,lo,hi,i,j,[],pivVal,
+        `<b>Línea 10:</b> j=${j}. <span class="hll">arr[${j}]=${a[j]}</span> ≤ <span class="hlp">${pivVal}</span>? → <b>${cmp?'<span class="hll">SÍ → i++ y swap</span>':'<span class="hlr">NO → j avanza</span>'}</b>`);
 
-      addStep('compare', hi, lo, hi, i, j, [],
-        `Comparamos <span class="hll">arr[${j}]=${a[j]}</span> con pivote <span class="hlp">${pivotVal}</span>. ¿${a[j]} ≤ ${pivotVal}? <strong>${cmp ? '¡Sí! Intercambiamos.' : 'No. j avanza.'}</strong>`);
-
-      if (cmp) {
+      if(cmp){
         i++;
-        if (i !== j) {
+        addStep(['iinc'],hi,lo,hi,i,j,[],pivVal,
+          `<b>Línea 11:</b> <span class="hll">i++ → i = ${i}</span>. La zona ≤ pivote creció.`);
+        if(i!==j){
           swaps++;
-          [a[i], a[j]] = [a[j], a[i]];
-          addStep('swap', hi, lo, hi, i, j, [i, j],
-            `↔️ Intercambiamos <span class="hlw">arr[${i}]=${a[i]}</span> ↔ <span class="hlw">arr[${j}]=${a[j]}</span>. La zona ≤ pivote crece hasta índice ${i}.`);
-        } else {
-          addStep('no_swap', hi, lo, hi, i, j, [],
-            `arr[${j}] ya está en la zona correcta (i=j=${i}). Solo avanzamos i → ${i}.`);
+          [a[i],a[j]]=[a[j],a[i]];
+          addStep(['swap'],hi,lo,hi,i,j,[i,j],pivVal,
+            `<b>Línea 12:</b> <span class="hlw">swap(arr[${i}]=${a[i]}, arr[${j}]=${a[j]})</span>. El menor va a la zona izquierda.`);
         }
       }
     }
 
-    // Place pivot
     swaps++;
-    [a[i + 1], a[hi]] = [a[hi], a[i + 1]];
-    pivotsPlaced++;
-    placedIdxs.add(i + 1);
+    [a[i+1],a[hi]]=[a[hi],a[i+1]];
+    pivots++;
+    placed.add(i+1);
+    addStep(['place','ret'],i+1,lo,hi,i+1,hi,[i+1,hi],pivVal,
+      `<b>Líneas 13–14:</b> <span class="hlp">swap(arr[${i+1}]=${a[i+1]}, arr[${hi}]=${a[hi]})</span>. ✅ Pivote <b>${pivVal}</b> en posición definitiva <b>${i+1}</b>.`);
 
-    addStep('pivot_placed', i + 1, lo, hi, i + 1, hi, [i + 1, hi],
-      `✅ Colocamos el pivote <span class="hlp">${pivotVal}</span> en su posición definitiva: índice <strong>${i + 1}</strong>. ¡Ya nunca se moverá!`);
-
-    return i + 1;
+    return i+1;
   }
 
-  function quickSort(lo, hi) {
-    if (lo >= hi) {
-      if (lo === hi) {
-        placedIdxs.add(lo);
-        addStep('base', lo, lo, hi, -1, -1, [],
-          `Subarray de 1 elemento [${a[lo]}] → caso base, ya ordenado.`);
-      }
+  function qs(lo,hi){
+    if(lo>=hi){
+      if(lo===hi){placed.add(lo);addStep(['base'],lo,lo,hi,-1,-1,[],a[lo],`Caso base: un elemento [${a[lo]}], ya ordenado.`);}
       return;
     }
-
     calls++;
-    callStack.push({ lo, hi });
+    callStack.push({lo,hi});
+    addStep(['fn'],−1,lo,hi,-1,-1,[],−1,
+      `<b>Línea 1:</b> quickSort(<span class="hll">${lo}</span>, <span class="hlr">${hi}</span>) → [${a.slice(lo,hi+1).join(', ')}]`);
 
-    addStep('call', -1, lo, hi, -1, -1, [],
-      `Nueva llamada quickSort(<span class="hll">${lo}</span>, <span class="hlr">${hi}</span>) → subarray [${a.slice(lo, hi + 1).join(', ')}]`);
-
-    const p = partition(lo, hi);
-
+    const p=partition(lo,hi);
     callStack.pop();
 
-    quickSort(lo, p - 1);
-    quickSort(p + 1, hi);
+    addStep(['recL'],-1,lo,p-1,-1,-1,[],-1,
+      `<b>Línea 4:</b> Llamada recursiva → <span class="hll">quickSort(${lo}, ${p-1})</span> (zona izquierda del pivote).`);
+    qs(lo,p-1);
+
+    addStep(['recR'],-1,p+1,hi,-1,-1,[],-1,
+      `<b>Línea 5:</b> Llamada recursiva → <span class="hlr">quickSort(${p+1}, ${hi})</span> (zona derecha del pivote).`);
+    qs(p+1,hi);
   }
 
-  quickSort(0, a.length - 1);
-
-  addStep('done', -1, 0, a.length - 1, -1, -1, [],
-    `🎉 <span class="hls">¡Ordenación completada!</span> <strong>${comparisons} comparaciones</strong>, <strong>${swaps} intercambios</strong>, <strong>${pivotsPlaced} pivotes colocados</strong>.`);
+  qs(0,a.length-1);
+  addStep(['base'],-1,0,a.length-1,-1,-1,[],-1,
+    `<b>✅ Completado.</b> Array ordenado: <span class="hls">[${a.join(', ')}]</span>. Comparaciones: <b>${comps}</b>. Intercambios: <b>${swaps}</b>. Pivotes colocados: <b>${pivots}</b>.`);
 
   return steps;
 }
 
-// ─── Render ───────────────────────────────────────────────────────────────────
-function renderBars(state) {
-  const wrap = document.getElementById('barsWrap');
-  const maxH = 175;
-  const maxVal = Math.max(...state.arr);
+// ── Get cell class ─────────────────────────────────────────────────────────
+function getCellCls(i,s){
+  if(s.placed.has(i)) return 'plc';
+  if(s.swapPair.includes(i)) return 'swp';
+  if(i===s.pivIdx) return 'piv';
+  if(s.iPtr>=0&&i>=s.lo&&i<=s.iPtr) return 'lft';
+  if(s.iPtr>=0&&i>s.iPtr&&i<s.pivIdx) return 'rgt';
+  if(i>=s.lo&&i<=s.hi) return 'rng';
+  return '';
+}
 
-  wrap.innerHTML = state.arr.map((v, i) => {
-    const isPlaced = state.placed.has(i);
-    const isPivot  = i === state.pivotIdx && !isPlaced;
-    const isSwap   = state.swapPair.includes(i);
-    const inRange  = i >= state.lo && i <= state.hi;
-    const isLeft   = inRange && i <= state.iPtr && !isPivot && !isSwap;
-    const isRight  = inRange && i > state.iPtr && i < state.pivotIdx && !isSwap;
-    const isDone   = state.type === 'done';
-
-    let bg = '#1e1e32';
-    if (isDone || isPlaced) bg = 'var(--placed)';
-    else if (isSwap)   bg = 'var(--swap)';
-    else if (isPivot)  bg = 'var(--pivot)';
-    else if (isLeft)   bg = 'var(--left)';
-    else if (isRight)  bg = 'var(--right)';
-    else if (inRange)  bg = '#1e2a3a';
-
-    const valColor = isDone || isPlaced ? 'var(--placed)' : isSwap ? 'var(--swap)' : isPivot ? 'var(--pivot)' : isLeft ? 'var(--left)' : isRight ? 'var(--right)' : 'var(--muted)';
-    const h = Math.max(14, Math.round((v / maxVal) * maxH));
-
-    return `<div class="bar-col">
-      <div class="bar-val" style="color:${valColor}">${v}</div>
-      <div class="bar" style="height:${h}px;background:${bg}"></div>
-      <div class="bar-idx">[${i}]</div>
-    </div>`;
+// ── Render mini bars ───────────────────────────────────────────────────────
+function renderFMini(s){
+  const maxV=Math.max(...s.arr);
+  document.getElementById('fMiniB').innerHTML=s.arr.map((v,i)=>{
+    const cls=getCellCls(i,s);
+    const bg=cls==='plc'?'var(--placed)':cls==='swp'?'var(--swap)':cls==='piv'?'var(--pivot)':cls==='lft'?'var(--left)':cls==='rgt'?'var(--right)':'var(--border2)';
+    const vc=bg==='var(--border2)'?'var(--muted2)':bg;
+    const h=Math.max(10,Math.round((v/maxV)*75));
+    return `<div class="mb-col"><div class="mb-val" style="color:${vc}">${v}</div><div class="mb-bar" style="height:${h}px;background:${bg}"></div><div class="mb-idx">[${i}]</div></div>`;
+  }).join('');
+  document.getElementById('fCells').innerHTML=s.arr.map((v,i)=>{
+    const cls=getCellCls(i,s);
+    return `<div style="position:relative;margin-bottom:18px"><div class="ac ${cls}">${v}</div><div class="ac-idx">[${i}]</div></div>`;
   }).join('');
 }
 
-function renderMarkers(state) {
-  const row = document.getElementById('markersRow');
-  row.innerHTML = state.arr.map((_, i) => {
-    let label = '', color = 'transparent';
-    if (i === state.pivotIdx && state.type !== 'done') { label = 'piv'; color = 'var(--pivot)'; }
-    if (i === state.iPtr && state.iPtr >= 0) { label = label ? label + '/i' : 'i'; color = 'var(--left)'; }
-    if (i === state.jPtr && state.jPtr >= 0 && i !== state.iPtr) { label = 'j'; color = 'var(--right)'; }
-    return `<div class="marker-cell" style="color:${color}">${label}</div>`;
+function renderFStack(s){
+  const el=document.getElementById('fStack');
+  if(!s.stack||s.stack.length===0){el.innerHTML='<div class="cs-empty">(vacía)</div>';return;}
+  el.innerHTML=s.stack.map((f,idx)=>{
+    const isTop=idx===s.stack.length-1;
+    return `<div class="cs-frame ${isTop?'active':''}">quickSort(${f.lo}, ${f.hi})</div>`;
   }).join('');
 }
 
-function renderStack(state) {
-  const list = document.getElementById('stackList');
-  if (!state.stack || state.stack.length === 0) {
-    list.innerHTML = `<div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);padding:4px 0;">(vacía)</div>`;
-    return;
-  }
-  list.innerHTML = state.stack.map((f, idx) => {
-    const isTop = idx === state.stack.length - 1;
-    return `<div class="stack-frame ${isTop ? 'active' : ''}">
-      quickSort(${f.lo}, ${f.hi})
-    </div>`;
+function applyFlow(s){
+  document.querySelectorAll('#pseudoBlock .code-line').forEach(el=>el.classList.toggle('active',s.lines.includes(el.dataset.l)));
+  renderFMini(s);
+  renderFStack(s);
+
+  document.getElementById('fvLo').innerHTML=`<b>lo =</b> ${s.lo}`;
+  document.getElementById('fvHi').innerHTML=`<b>hi =</b> ${s.hi}`;
+  document.getElementById('fvPiv').innerHTML=`<b>pivote =</b> ${s.pivVal>=0?s.pivVal:'—'}`;
+  document.getElementById('fvI').innerHTML=`<b>i =</b> ${s.iPtr!==null?s.iPtr:'—'}`;
+  document.getElementById('fvJ').innerHTML=`<b>j =</b> ${s.jPtr!==null&&s.jPtr>=0?s.jPtr:'—'}`;
+  document.getElementById('fvP').innerHTML=`<b>p (ret) =</b> ${s.placed.size>0?Math.max(...s.placed):'—'}`;
+
+  const cmpTxt=s.jPtr>=0&&s.pivVal>=0
+    ?`arr[${s.jPtr}] = ${s.arr[s.jPtr]} ${s.arr[s.jPtr]<=s.pivVal?'≤':'>'} ${s.pivVal} (pivote)`
+    :'esperando comparación...';
+  document.getElementById('fCmpBox').textContent=cmpTxt;
+  document.getElementById('fCmpBox').style.color=s.jPtr>=0&&s.pivVal>=0?(s.arr[s.jPtr]<=s.pivVal?'var(--left)':'var(--right)'):'var(--muted)';
+
+  document.getElementById('fvComp').innerHTML=`<b>comps =</b> ${s.comps}`;
+  document.getElementById('fvSwap').innerHTML=`<b>swaps =</b> ${s.swaps}`;
+  document.getElementById('fvPivs').innerHTML=`<b>pivotes =</b> ${s.pivots}`;
+  document.getElementById('fvCalls').innerHTML=`<b>llamadas =</b> ${s.calls}`;
+  document.getElementById('fExplain').innerHTML=s.msg;
+}
+
+// ══ FLOW VIZ ══════════════════════════════════════════════════════════════
+let fArr=[...DEFAULT_ARR],fSteps=null,fTimer=null,fDone=false,fN=0,fIdx=0;
+
+function fStep(){
+  if(fDone||!fSteps)return;
+  if(fIdx>=fSteps.length){fDone=true;fStopAuto();return;}
+  applyFlow(fSteps[fIdx]);fIdx++;fN++;
+  document.getElementById('f-ctr').textContent='paso '+fN;
+  if(fIdx>=fSteps.length){fDone=true;document.getElementById('f-step').disabled=true;fStopAuto();}
+}
+function fStopAuto(){clearInterval(fTimer);fTimer=null;document.getElementById('f-auto').textContent='▶ Auto';if(fDone)document.getElementById('f-auto').disabled=true;}
+function fReset(a){
+  fStopAuto();fDone=false;fN=0;fIdx=0;fArr=a||[...DEFAULT_ARR];
+  fSteps=buildSteps(fArr);
+  document.getElementById('f-step').disabled=false;document.getElementById('f-auto').disabled=false;
+  document.getElementById('f-auto').textContent='▶ Auto';document.getElementById('f-ctr').textContent='paso 0';
+  document.querySelectorAll('#pseudoBlock .code-line').forEach(el=>el.classList.remove('active'));
+  document.getElementById('fExplain').innerHTML='Pulsa <b>Paso →</b> para seguir la ejecución. La pila de llamadas muestra la recursión activa en rojo.';
+  document.getElementById('fStack').innerHTML='<div class="cs-empty">(vacía)</div>';
+  const is={lines:[],arr:fArr,pivIdx:-1,lo:-1,hi:-1,iPtr:-1,jPtr:-1,swapPair:[],pivVal:-1,placed:new Set(),stack:[],comps:0,swaps:0,pivots:0,calls:0};
+  renderFMini(is);
+  document.getElementById('fCmpBox').textContent='esperando comparación...';document.getElementById('fCmpBox').style.color='var(--muted)';
+  ['fvLo','fvHi','fvPiv','fvI','fvJ','fvP'].forEach(id=>{document.getElementById(id).innerHTML=document.getElementById(id).innerHTML.replace(/=.*$/,'= —');document.getElementById(id).className='var-pill';});
+  ['fvComp','fvSwap','fvPivs','fvCalls'].forEach((id,k)=>{document.getElementById(id).innerHTML=`<b>${['comps','swaps','pivotes','llamadas'][k]} =</b> 0`;});
+}
+document.getElementById('f-step').addEventListener('click',fStep);
+document.getElementById('f-reset').addEventListener('click',()=>fReset());
+document.getElementById('f-shuffle').addEventListener('click',()=>fReset(shuffle(POOL)));
+document.getElementById('f-auto').addEventListener('click',function(){if(fTimer){fStopAuto();}else{this.textContent='⏸ Pausa';const sp=1700-parseInt(document.getElementById('fSp').value);fTimer=setInterval(()=>{fStep();if(fDone)fStopAuto();},sp);}});
+
+// ══ CLASSIC VIZ ═══════════════════════════════════════════════════════════
+let cArr=[...DEFAULT_ARR],cSteps=null,cTimer=null,cDone=false,cIdx=0,cLogN=0;
+
+function renderClassic(s){
+  const maxV=Math.max(...s.arr);
+  document.getElementById('cBars').innerHTML=s.arr.map((v,i)=>{
+    const cls=getCellCls(i,s);
+    const bg=cls==='plc'?'var(--placed)':cls==='swp'?'var(--swap)':cls==='piv'?'var(--pivot)':cls==='lft'?'var(--left)':cls==='rgt'?'var(--right)':'var(--border2)';
+    const vc=bg==='var(--border2)'?'var(--muted)':bg;
+    const h=Math.max(14,Math.round((v/maxV)*175));
+    return `<div class="bar-col2"><div class="bar-val2" style="color:${vc}">${v}</div><div class="bar2" style="height:${h}px;background:${bg}"></div><div class="bar-idx2">[${i}]</div></div>`;
   }).join('');
-}
 
-function renderCells(state) {
-  const disp = document.getElementById('arrayDisplay');
-  disp.innerHTML = state.arr.map((v, i) => {
-    const isPlaced = state.placed.has(i);
-    const isPivot  = i === state.pivotIdx && !isPlaced;
-    const isSwap   = state.swapPair.includes(i);
-    const inRange  = i >= state.lo && i <= state.hi;
-    const isLeft   = inRange && i <= state.iPtr && !isPivot && !isSwap;
-    const isRight  = inRange && i > state.iPtr && i < state.pivotIdx && !isSwap;
-    const isDone   = state.type === 'done';
-    let cls = '';
-    if (isDone || isPlaced) cls = 'placed';
-    else if (isSwap)   cls = 'swapping';
-    else if (isPivot)  cls = 'pivot';
-    else if (isLeft)   cls = 'left-z';
-    else if (isRight)  cls = 'right-z';
-    else if (inRange)  cls = 'active-range';
-    return `<div class="arr-cell ${cls}">${v}</div>`;
+  document.getElementById('cMarkers').innerHTML=s.arr.map((_,i)=>{
+    if(i===s.pivIdx&&!s.placed.has(i)) return `<div class="marker-cell" style="color:var(--pivot)">piv</div>`;
+    if(i===s.iPtr&&s.iPtr>=0) return `<div class="marker-cell" style="color:var(--left)">i</div>`;
+    if(i===s.jPtr&&s.jPtr>=0&&i!==s.iPtr) return `<div class="marker-cell" style="color:var(--right)">j</div>`;
+    return `<div class="marker-cell"></div>`;
   }).join('');
+
+  const csl=document.getElementById('cStack');
+  if(!s.stack||s.stack.length===0){csl.innerHTML='<div style="font-family:\'Space Mono\',monospace;font-size:11px;color:var(--muted2);padding:4px">(vacía)</div>';}
+  else{csl.innerHTML=s.stack.map((f,idx)=>{const isTop=idx===s.stack.length-1;return `<div class="cs-frame ${isTop?'active':''}" style="font-size:11px">quickSort(${f.lo},${f.hi})</div>`;}).join('');}
+
+  document.getElementById('cCells').innerHTML=s.arr.map((v,i)=>{
+    const cls=getCellCls(i,s);
+    const cc=cls==='plc'?'plc':cls==='swp'?'swp':cls==='piv'?'piv':cls==='lft'?'lft':cls==='rgt'?'rgt':'';
+    return `<div class="arr-cell ${cc}">${v}</div>`;
+  }).join('');
+
+  document.getElementById('cComp').textContent=s.comps;
+  document.getElementById('cSwap').textContent=s.swaps;
+  document.getElementById('cPivs').textContent=s.pivots;
+  document.getElementById('cCalls').textContent=s.calls;
 }
 
-function renderStats(state) {
-  document.getElementById('statComp').textContent   = state.comparisons;
-  document.getElementById('statSwap').textContent   = state.swaps;
-  document.getElementById('statPivots').textContent = state.pivotsPlaced;
-  document.getElementById('statCalls').textContent  = state.calls;
+function addCLog(msg){const log=document.getElementById('cLog');const d=document.createElement('div');d.className='ls';d.innerHTML=`<span style="color:var(--muted2)">[${String(cLogN).padStart(2,'0')}]</span> ${msg.replace(/<[^>]*>/g,'')}`;log.appendChild(d);log.scrollTop=log.scrollHeight;cLogN++;}
+
+function cStep(){if(cDone||!cSteps)return;if(cIdx>=cSteps.length){cDone=true;cStopAuto();return;}const s=cSteps[cIdx];cIdx++;renderClassic(s);document.getElementById('cExplain').innerHTML=s.msg;addCLog(s.msg);if(cIdx>=cSteps.length){cDone=true;document.getElementById('c-step').disabled=true;cStopAuto();}}
+function cStopAuto(){clearInterval(cTimer);cTimer=null;document.getElementById('c-auto').textContent='▶ Auto';if(cDone)document.getElementById('c-auto').disabled=true;}
+function cReset(a){
+  cStopAuto();cDone=false;cIdx=0;cLogN=0;cArr=a||[...DEFAULT_ARR];
+  cSteps=buildSteps(cArr);
+  document.getElementById('c-step').disabled=false;document.getElementById('c-auto').disabled=false;
+  document.getElementById('c-auto').textContent='▶ Auto';
+  document.getElementById('cExplain').innerHTML='Pulsa <strong>Paso →</strong> para ver cómo el pivote encuentra su posición definitiva.';
+  document.getElementById('cLog').innerHTML='';
+  renderClassic({arr:cArr,pivIdx:-1,lo:-1,hi:-1,iPtr:-1,jPtr:-1,swapPair:[],placed:new Set(),stack:[],comps:0,swaps:0,pivots:0,calls:0});
 }
+document.getElementById('c-step').addEventListener('click',cStep);
+document.getElementById('c-reset').addEventListener('click',()=>cReset());
+document.getElementById('c-shuffle').addEventListener('click',()=>cReset(shuffle(POOL)));
+document.getElementById('c-auto').addEventListener('click',function(){if(cTimer){cStopAuto();}else{this.textContent='⏸ Pausa';const sp=1600-parseInt(document.getElementById('cSp').value);cTimer=setInterval(()=>{cStep();if(cDone)cStopAuto();},sp);}});
 
-function renderAll(state) {
-  renderBars(state);
-  renderMarkers(state);
-  renderStack(state);
-  renderCells(state);
-  renderStats(state);
-  document.getElementById('stepExplain').innerHTML = state.msg;
-}
+// ── Navbar ────────────────────────────────────────────────────────────────
+const SECS=['hero','concepto','pasos','flujo-datos','visualizador','pseudocodigo','complejidad','comparacion'];
+window.addEventListener('scroll',()=>{let cur='';SECS.forEach(id=>{const el=document.getElementById(id);if(el&&window.scrollY>=el.offsetTop-80)cur=id;});document.querySelectorAll('.nav-link').forEach(a=>a.classList.toggle('active',a.getAttribute('href')==='#'+cur));},{passive:true});
 
-// ─── Control ──────────────────────────────────────────────────────────────────
-let steps = [], stepIdx = 0, autoTimer = null, done = false;
-
-function initState() {
-  steps = buildSteps(arr);
-  stepIdx = 0;
-  done = false;
-  clearInterval(autoTimer); autoTimer = null;
-  document.getElementById('btnAuto').textContent = '▶ Auto';
-  document.getElementById('btnStep').disabled = false;
-  document.getElementById('btnAuto').disabled = false;
-
-  renderAll({
-    type: 'init', arr: [...arr], pivotIdx: -1,
-    lo: -1, hi: -1, iPtr: -1, jPtr: -1, swapPair: [],
-    comparisons: 0, swaps: 0, pivotsPlaced: 0, calls: 0,
-    placed: new Set(), stack: [],
-    msg: `Pulsa <strong>Paso →</strong> para ver cómo el pivote encuentra su posición definitiva, o <strong>▶ Auto</strong> para la animación completa.`
-  });
-}
-
-function step() {
-  if (done || stepIdx >= steps.length) return;
-  renderAll(steps[stepIdx]);
-  stepIdx++;
-  if (stepIdx >= steps.length) {
-    done = true;
-    document.getElementById('btnStep').disabled = true;
-    document.getElementById('btnAuto').disabled = true;
-    clearInterval(autoTimer); autoTimer = null;
-    document.getElementById('btnAuto').textContent = '▶ Auto';
-  }
-}
-
-document.getElementById('btnStep').addEventListener('click', step);
-
-document.getElementById('btnAuto').addEventListener('click', function () {
-  if (autoTimer) {
-    clearInterval(autoTimer); autoTimer = null;
-    this.textContent = '▶ Auto';
-  } else {
-    const speed = 1600 - parseInt(document.getElementById('speedSlider').value);
-    this.textContent = '⏸ Pausa';
-    autoTimer = setInterval(() => {
-      step();
-      if (done) {
-        clearInterval(autoTimer); autoTimer = null;
-        document.getElementById('btnAuto').textContent = '▶ Auto';
-      }
-    }, speed);
-  }
-});
-
-document.getElementById('btnReset').addEventListener('click', () => { arr = [...DEFAULT_ARR]; initState(); });
-
-document.getElementById('btnShuffle').addEventListener('click', () => {
-  const pool = [10, 20, 30, 40, 50, 60, 70, 80, 90, 15, 35, 55];
-  arr = pool.sort(() => Math.random() - 0.5).slice(0, 7);
-  initState();
-});
-
-initState();
+fReset();cReset();
 </script>
 </body>
 </html>
